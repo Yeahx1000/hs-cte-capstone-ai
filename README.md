@@ -2,6 +2,18 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 # Capstone AI
 
+> [!IMPORTANT] 
+> You will NEED a google account to use this app for now.
+
+## Tech Stack
+- Next.js
+- NextAuth
+- Tailwind CSS
+- Zod
+- Vitest
+- OpenAI
+- Google Drive
+
 ## Getting Started
 
 First, run the development server:
@@ -18,21 +30,21 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Clone Repo
+2. Install dependencies with `npm install or npm i` (yarn and pnpm should also work)
 
-## Learn More
+> [!CAUTION]
+> don't share your `.env` variables publically!! Unless you want to give free LLM access to everyone on your dime!
+3. You'll need to create a `.env.local` file in the root directory with the following variables:
+    - `OPENAI_API_KEY`: Your OpenAI API key
+    - `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
+    - `GOOGLE_CLIENT_SECRET`: Your Google OAuth Client Secret
+    - `AUTH_SECRET`: A random secret for NextAuth
+        - You can generate a secret in terminal with `openssl rand -base64 32` or use an online generator like: https://generate-secret.vercel.app/32
 
-To learn more about Next.js, take a look at the following resources:
+    Google variables can mostly be found in the Google Cloud Console under "Credentials" → "Create Credentials" → "OAuth client ID"
+4. 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
