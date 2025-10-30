@@ -15,7 +15,8 @@
     "openai": "^6.7.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "vitest": "^4.0.5"
+    "vitest": "^4.0.5",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
