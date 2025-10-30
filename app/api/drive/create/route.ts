@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 // TODO: this is only a basic filler template for Google Drive API call, I'll expand on this later also
 
 
 export async function POST(request: Request) {
     try {
-        const { fileName, fileContent } = await request.json();
+        const { fileName, fileContent, mimeType = "text/plain", folderId } = await request.json();
 
         if (!fileName || !fileContent) {
             return NextResponse.json(
@@ -15,25 +18,35 @@ export async function POST(request: Request) {
             );
         }
 
-        // Initialize Google Drive API client
+        if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+            return NextResponse.json(
+                { error: "Missing Google service account credentials (GOOGLE_CLIENT_EMAIL/GOOGLE_PRIVATE_KEY)." },
+                { status: 500 }
+            );
+        }
+
+        // Init Google Drive API client (Service Account JWT)
         const auth = new google.auth.GoogleAuth({
             credentials: {
                 client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
             },
-            scopes: ["https://www.googleapis.com/auth/drive写真"],
+            scopes: ["https://www.googleapis.com/auth/drive.file"],
         });
 
         const drive = google.drive({ version: "v3", auth });
 
         // Create file in Google Drive
-        const fileMetadata = {
+        const fileMetadata: Record<string, unknown> = {
             name: fileName,
         };
+        if (folderId) {
+            fileMetadata.parents = [folderId];
+        }
 
         const media = {
-            mimeType: "text/plain",
-            body: fileContent,
+            mimeType,
+            body: Buffer.from(fileContent, "utf-8"),
         };
 
         const response = await drive.files.create({
