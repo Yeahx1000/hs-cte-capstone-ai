@@ -21,6 +21,14 @@ export interface Message {
     content: string;
 }
 
+// Conversation state types
+export type ConversationPhase = "brainstorm" | "review" | "complete";
+
+export interface ConversationState {
+    turnCount: number;
+    phase: ConversationPhase;
+}
+
 // User types (from NextAuth)
 export interface User {
     name?: string | null;
@@ -43,6 +51,7 @@ export interface MessageHistoryProps {
 export interface MessageInputProps {
     onSend: (message: string) => void;
     disabled?: boolean;
+    phase?: ConversationPhase;
 }
 
 export interface SummaryCardProps {
@@ -57,3 +66,19 @@ export interface OnboardingProps {
     user: User;
 }
 
+export interface CapstoneContent {
+    docText: string;
+    csvData: string[][];
+    slideOutline: Array<{ title: string; content: string[] }>;
+}
+
+export interface CapstoneManifest {
+    title: string;
+    ctePathway: string;
+    objectives: string[];
+    deliverables: string[];
+    timeline: Array<{ phase: string; weeks: number; tasks: string[] }>;
+    assessment: string[];
+    resources: string[];
+    content: CapstoneContent;
+}

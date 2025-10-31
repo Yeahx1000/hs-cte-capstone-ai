@@ -1,19 +1,47 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Manifest } from "@/lib/manifest";
-import { Message } from "@/types";
+import { Message, ConversationPhase, ConversationState } from "@/types";
 
 // currently using this custom hook initialized before. 
 // Reason? I feel it helps to manage state and logic for the chat component in a more organized way. 
 // I coould be wrong, but it's the choice I'm going with for now.
+
+const MAX_TURNS = 5; // Max num of turns before moving to review, might be too short but whatever for now.
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [manifest, setManifest] = useState<Manifest | null>(null);
+    const [conversationState, setConversationState] = useState<ConversationState>({
+        turnCount: 0,
+        phase: "brainstorm",
+    });
+
+    useEffect(() => {
+        const storedState = sessionStorage.getItem("conversationState");
+        if (storedState) {
+            try {
+                const parsed = JSON.parse(storedState);
+                setConversationState(parsed);
+            } catch {
+                // Invalid data, use defaults
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        sessionStorage.setItem("conversationState", JSON.stringify(conversationState));
+    }, [conversationState]);
 
     const sendMessage = useCallback(async (content: string, onboardingData?: any) => {
         if (!content.trim()) return;
+
+        // Prevent sending messages if we're in review or complete phase, 
+        // might change this if user wants to add more context, it kind of stops and asks to review abruptly.
+        if (conversationState.phase === "review" || conversationState.phase === "complete") {
+            return;
+        }
 
         const userMessage: Message = { role: "user", content };
         setMessages((prev) => [...prev, userMessage]);
@@ -27,22 +55,24 @@ export const useChat = () => {
                 content: m.content,
             }));
 
-            // Add onboarding data if available (just name, assuming high school age)
+            // Add onboarding data, name should be required.
             let messageContent = content;
             if (onboardingData && messages.length === 0 && onboardingData.name) {
                 messageContent = `The student's name is ${onboardingData.name}. They are a high school student. ${content}`;
             } else if (messages.length === 0) {
-                // First message - assume high school student
+                // First message - assumes it's a high school student
                 messageContent = `You are talking to a high school student. ${content}`;
             }
 
-            // Call the chat API (for conversation)
+            // Calling the chat API (for conversation)
             const response = await fetch("/api/llm/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: messageContent,
                     conversation: conversationContext,
+                    turnCount: conversationState.turnCount,
+                    phase: conversationState.phase,
                 }),
             });
 
@@ -51,6 +81,15 @@ export const useChat = () => {
             }
 
             const data = await response.json();
+
+            // Checking for conversation phase changed (moved to review etc, based on turn count)
+            const newPhase = (data.phase as ConversationPhase) || conversationState.phase;
+            const newTurnCount = data.turnCount !== undefined ? data.turnCount : conversationState.turnCount + 1;
+
+            setConversationState((prev) => ({
+                turnCount: newTurnCount,
+                phase: newPhase,
+            }));
 
             // If we get a manifest back, store it
             if (data.manifest && data.manifest.title && data.manifest.ctePathway) {
@@ -74,7 +113,7 @@ export const useChat = () => {
         } finally {
             setLoading(false);
         }
-    }, [messages]);
+    }, [messages, conversationState]);
 
     const generateManifest = useCallback(async () => {
         setLoading(true);
@@ -118,5 +157,6 @@ export const useChat = () => {
         manifest,
         sendMessage,
         generateManifest,
+        conversationState,
     };
 };

@@ -8,6 +8,17 @@ export const TimelinePhaseSchema = z.object({
     tasks: z.array(z.string()),
 });
 
+export const CapstoneContentSchema = z.object({
+    docText: z.string(),
+    csvData: z.array(z.array(z.string())),
+    slideOutline: z.array(
+        z.object({
+            title: z.string(),
+            content: z.array(z.string()),
+        })
+    ),
+});
+
 export const ManifestSchema = z.object({
     title: z.string(),
     ctePathway: z.string(),
@@ -16,8 +27,10 @@ export const ManifestSchema = z.object({
     timeline: z.array(TimelinePhaseSchema),
     assessment: z.array(z.string()),
     resources: z.array(z.string()),
+    content: CapstoneContentSchema.optional(),
 });
 
 export type Manifest = z.infer<typeof ManifestSchema>;
 export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
+export type CapstoneContent = z.infer<typeof CapstoneContentSchema>;
 

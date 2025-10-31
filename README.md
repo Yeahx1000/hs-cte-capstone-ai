@@ -45,6 +45,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
         - You can generate a secret in terminal with `openssl rand -base64 32` or use an online generator like: https://generate-secret.vercel.app/32
 
     Google variables can mostly be found in the Google Cloud Console under "Credentials" → "Create Credentials" → "OAuth client ID"
-4. 
+4. In testing mode with Google 0Auth, Test users will need to be manually added to gain access to this app. Use their email address or they will be rejected at login.
 
 

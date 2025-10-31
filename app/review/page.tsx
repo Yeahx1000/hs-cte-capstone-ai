@@ -34,7 +34,7 @@ export default function ReviewPage() {
     };
 
     const handleCreateInDrive = async () => {
-        if (!manifest) return;
+        if (!manifest || !session?.user) return;
 
         setLoading(true);
         setError(null);
@@ -43,51 +43,32 @@ export default function ReviewPage() {
             // Save manifest first
             sessionStorage.setItem("manifest", JSON.stringify(manifest));
 
-            // Format manifest for Drive - create folder first, then file
-            const folderContent = `# ${manifest.title}
-
-## CTE Pathway
-${manifest.ctePathway}
-
-## Objectives
-${manifest.objectives.map((obj) => `- ${obj}`).join("\n")}
-
-## Deliverables
-${manifest.deliverables.map((del) => `- ${del}`).join("\n")}
-
-## Timeline
-${manifest.timeline.map((phase) => `
-### ${phase.phase} (${phase.weeks} weeks)
-${phase.tasks.map((task) => `- ${task}`).join("\n")}
-`).join("\n")}
-
-## Assessment
-${manifest.assessment.map((ass) => `- ${ass}`).join("\n")}
-
-## Resources
-${manifest.resources.map((res) => `- ${res}`).join("\n")}
-`;
-
-            // Create the file in Drive
-            const response = await fetch("/api/drive/create", {
+            // Create capstone files in Google Drive (Docs only for now, less verification needed)
+            const response = await fetch("/api/capstone/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    fileName: `${manifest.title} - Capstone Project.md`,
-                    fileContent: folderContent,
-                    mimeType: "text/markdown",
+                    manifest,
+                    studentName: session.user.name || session.user.email || "Student",
                 }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed to create file in Drive");
+                throw new Error(errorData.error || "Failed to create capstone files in Drive");
             }
 
             const data = await response.json();
 
-            // Show success and redirect
-            alert(`Successfully created in Google Drive!${data.link ? `\nView: ${data.link}` : ""}`);
+            // Show success with links to all created files
+            const fileLinks = [
+                `Folder: ${data.folderLink}`,
+                data.files.doc ? `Document: ${data.files.doc.link}` : "",
+            ]
+                .filter(Boolean)
+                .join("\n");
+
+            alert(`Successfully created capstone files in Google Drive!\n\n${fileLinks}`);
             router.push("/chat");
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");

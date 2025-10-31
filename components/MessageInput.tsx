@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageInputProps } from "@/types";
 
-function MessageInput({ onSend, disabled = false }: MessageInputProps) {
+function MessageInput({ onSend, disabled = false, phase }: MessageInputProps) {
     const [message, setMessage] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const prevDisabledRef = useRef(disabled);
@@ -39,7 +39,11 @@ function MessageInput({ onSend, disabled = false }: MessageInputProps) {
                     ref={textareaRef}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Message Capstone AI..."
+                    placeholder={
+                        phase === "review" || phase === "complete"
+                            ? "Ready to review your capstone plan..."
+                            : "Message Capstone AI..."
+                    }
                     rows={1}
                     disabled={disabled}
                     className="flex-1 resize-none bg-transparent border-none outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm py-2 px-3 max-h-32 overflow-y-auto leading-6 disabled:opacity-50"

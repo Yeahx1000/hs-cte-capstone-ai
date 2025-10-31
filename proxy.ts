@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
-// some simple middleware for logged in state, mostly rerouting on loggedin or !loggedin users
+// some simple proxy for logged in state, mostly rerouting on loggedin or !loggedin users
 
 export default auth((req) => {
     const isLoggedIn = !!req.auth;

@@ -10,7 +10,7 @@ import { useChat } from "@/lib/hooks/useChat";
 export default function ChatPage() {
     const router = useRouter();
     const { data: session } = useSession();
-    const { messages, loading, error, manifest, sendMessage } = useChat();
+    const { messages, loading, error, manifest, sendMessage, conversationState } = useChat();
     const [onboardingData, setOnboardingData] = useState<any>(null);
 
     useEffect(() => {
@@ -67,8 +67,59 @@ export default function ChatPage() {
                             messages={messages}
                             loading={loading}
                             onSendMessage={handleSendMessage}
+                            conversationState={conversationState}
                         />
                     </div>
+                    {conversationState?.phase === "review" && !loading && (
+                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg shrink-0">
+                            <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                                Ready to review your capstone plan?
+                            </p>
+                            <button
+                                onClick={async () => {
+                                    // If we don't have a manifest yet, generate it first
+                                    if (!manifest) {
+                                        // Generate manifest from conversation
+                                        const conversationSummary = messages
+                                            .map((m) => `${m.role}: ${m.content}`)
+                                            .join("\n");
+
+                                        try {
+                                            const response = await fetch("/api/llm/plan", {
+                                                method: "POST",
+                                                headers: { "Content-Type": "application/json" },
+                                                body: JSON.stringify({
+                                                    message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
+                                                    generateManifest: true,
+                                                    conversation: messages.map((m) => ({
+                                                        role: m.role,
+                                                        content: m.content,
+                                                    })),
+                                                }),
+                                            });
+
+                                            if (response.ok) {
+                                                const data = await response.json();
+                                                sessionStorage.setItem("manifest", JSON.stringify(data));
+                                                router.push("/review");
+                                            } else {
+                                                throw new Error("Failed to generate manifest");
+                                            }
+                                        } catch (err) {
+                                            console.error("Failed to generate manifest:", err);
+                                            // Still navigate to review - maybe there's an existing manifest
+                                            router.push("/review");
+                                        }
+                                    } else {
+                                        router.push("/review");
+                                    }
+                                }}
+                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                            >
+                                Review Your Capstone Plan
+                            </button>
+                        </div>
+                    )}
                     {error && (
                         <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shrink-0">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
