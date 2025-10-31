@@ -37,7 +37,7 @@ export const useChat = () => {
             }
 
             // Call the chat API (for conversation)
-            const response = await fetch("/api/plan", {
+            const response = await fetch("/api/llm/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -86,7 +86,7 @@ export const useChat = () => {
                 .map((m) => `${m.role}: ${m.content}`)
                 .join("\n");
 
-            const response = await fetch("/api/plan", {
+            const response = await fetch("/api/llm/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -44,7 +44,7 @@ vi.mock("openai", () => {
     return { default: OpenAIMock };
 });
 
-describe("POST /api/plan", () => {
+describe("POST /api/llm/plan", () => {
     beforeEach(() => {
         process.env.OPENAI_API_KEY = "sk-test";
     });

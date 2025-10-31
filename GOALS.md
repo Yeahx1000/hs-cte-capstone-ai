@@ -8,7 +8,7 @@ I'll use this file to keep track of the end goals of this project. The file will
     - Front facing UI components: basic page layout -> chat history (above) -> chat input field -> send button (with enter keyDown event) -> loading/thinkin/error state for LLM -> response bubbles or text.
 
 ### API routes (Node runtime):
-- POST /api/plan: calls LLM, returns a validated manifest
+- POST /api/llm/plan: calls LLM, returns a validated manifest
 - POST /api/drive/create: uses Google access token from browser to create folder + files
     - Auth to Google: Google Identity Services (GIS) in the browser → scope drive.file (least privilege). Send the short-lived token to your API route only at export time.
 
