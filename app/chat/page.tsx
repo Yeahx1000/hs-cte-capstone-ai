@@ -12,6 +12,7 @@ export default function ChatPage() {
     const { data: session } = useSession();
     const { messages, loading, error, manifest, sendMessage, conversationState } = useChat();
     const [onboardingData, setOnboardingData] = useState<any>(null);
+    const [reviewLoading, setReviewLoading] = useState(false);
 
     useEffect(() => {
         // Get onboarding data from sessionStorage (optional)
@@ -77,46 +78,54 @@ export default function ChatPage() {
                             </p>
                             <button
                                 onClick={async () => {
-                                    // If we don't have a manifest yet, generate it first
-                                    if (!manifest) {
-                                        // Generate manifest from conversation
-                                        const conversationSummary = messages
-                                            .map((m) => `${m.role}: ${m.content}`)
-                                            .join("\n");
+                                    if (reviewLoading) return;
 
-                                        try {
-                                            const response = await fetch("/api/llm/plan", {
-                                                method: "POST",
-                                                headers: { "Content-Type": "application/json" },
-                                                body: JSON.stringify({
-                                                    message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
-                                                    generateManifest: true,
-                                                    conversation: messages.map((m) => ({
-                                                        role: m.role,
-                                                        content: m.content,
-                                                    })),
-                                                }),
-                                            });
+                                    setReviewLoading(true);
+                                    try {
+                                        // If we don't have a manifest yet, generate it first
+                                        if (!manifest) {
+                                            // Generate manifest from conversation
+                                            const conversationSummary = messages
+                                                .map((m) => `${m.role}: ${m.content}`)
+                                                .join("\n");
 
-                                            if (response.ok) {
-                                                const data = await response.json();
-                                                sessionStorage.setItem("manifest", JSON.stringify(data));
+                                            try {
+                                                const response = await fetch("/api/llm/plan", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({
+                                                        message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
+                                                        generateManifest: true,
+                                                        conversation: messages.map((m) => ({
+                                                            role: m.role,
+                                                            content: m.content,
+                                                        })),
+                                                    }),
+                                                });
+
+                                                if (response.ok) {
+                                                    const data = await response.json();
+                                                    sessionStorage.setItem("manifest", JSON.stringify(data));
+                                                    router.push("/review");
+                                                } else {
+                                                    throw new Error("Failed to generate manifest");
+                                                }
+                                            } catch (err) {
+                                                console.error("Failed to generate manifest:", err);
+                                                // Still navigate to review - maybe there's an existing manifest
                                                 router.push("/review");
-                                            } else {
-                                                throw new Error("Failed to generate manifest");
                                             }
-                                        } catch (err) {
-                                            console.error("Failed to generate manifest:", err);
-                                            // Still navigate to review - maybe there's an existing manifest
+                                        } else {
                                             router.push("/review");
                                         }
-                                    } else {
-                                        router.push("/review");
+                                    } finally {
+                                        setReviewLoading(false);
                                     }
                                 }}
-                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                                disabled={reviewLoading}
+                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                Review Your Capstone Plan
+                                {reviewLoading ? "Loading..." : "Review Your Capstone Plan"}
                             </button>
                         </div>
                     )}
