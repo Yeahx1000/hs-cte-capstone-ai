@@ -36,9 +36,10 @@ export default function Onboarding({ user }: OnboardingProps) {
         <div className="w-full space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Your Name (Optional)
+              Your Name (required)
             </label>
             <input
+              required
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -53,8 +54,9 @@ export default function Onboarding({ user }: OnboardingProps) {
           </div>
 
           <button
+            disabled={!name.trim()}
             onClick={handleContinue}
-            className="w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+            className={`w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors ${!name.trim() ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             Start Planning
           </button>

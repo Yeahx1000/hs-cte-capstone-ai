@@ -5,6 +5,7 @@ import { MessageInputProps } from "@/types";
 function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     const [message, setMessage] = useState("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const prevDisabledRef = useRef(disabled);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -12,6 +13,14 @@ function MessageInput({ onSend, disabled = false }: MessageInputProps) {
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     }, [message]);
+
+    // auto focusing back into textarea when LLM responds, QOL feature.
+    useEffect(() => {
+        if (prevDisabledRef.current === true && disabled === false && textareaRef.current) {
+            textareaRef.current.focus();
+        }
+        prevDisabledRef.current = disabled;
+    }, [disabled]);
 
     const handleSend = () => {
         if (message.trim() && !disabled) {
