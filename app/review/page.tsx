@@ -43,10 +43,14 @@ export default function ReviewPage() {
             // Save manifest first
             sessionStorage.setItem("manifest", JSON.stringify(manifest));
 
-            // Create capstone files in Google Drive (Docs only for now, less verification needed)
+            // Create capstone files in Google Drive
             const response = await fetch("/api/capstone/create", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    // Pass the user's access token
+                    "Authorization": `Bearer ${(session as any).accessToken}`,
+                },
                 body: JSON.stringify({
                     manifest,
                     studentName: session.user.name || session.user.email || "Student",

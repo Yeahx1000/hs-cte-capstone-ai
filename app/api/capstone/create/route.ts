@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import { CapstoneManifest } from "@/types";
+import { OAuth2Client } from "google-auth-library";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,10 +10,23 @@ export const dynamic = "force-dynamic";
 // it creates the files in Google Drive, and returns the links to the files.
 // 
 
+// FIXME: the setup has is trying to use the app service account, which results in a 403 drive full error,
+// so we're using the user's access token instead to access their personal drive.
 
 export async function POST(request: Request) {
     try {
         const { manifest, studentName } = await request.json();
+
+        // Get the user's access token from Authorization header, not service account
+        const authHeader = request.headers.get("Authorization");
+        const userAccessToken = authHeader?.replace("Bearer ", "");
+
+        if (!userAccessToken) {
+            return NextResponse.json(
+                { error: "User authentication required. Please log in again." },
+                { status: 401 }
+            );
+        }
 
         if (!manifest || !manifest.title || !manifest.content) {
             return NextResponse.json(
@@ -21,32 +35,17 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-            return NextResponse.json(
-                { error: "Missing Google service account credentials (GOOGLE_CLIENT_EMAIL/GOOGLE_PRIVATE_KEY)." },
-                { status: 500 }
-            );
-        }
-
         const typedManifest = manifest as CapstoneManifest;
         const folderName = `CTE Capstone – ${studentName || "Student"}`;
 
-        // Initialize Google Auth
-        const auth = new google.auth.GoogleAuth({
-            credentials: {
-                client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-            },
-            scopes: [
-                "https://www.googleapis.com/auth/drive.file",
-                "https://www.googleapis.com/auth/documents",
-            ],
-        });
+        // Initialize Google Auth using USER'S token (not service account)
+        const auth = new OAuth2Client();
+        auth.setCredentials({ access_token: userAccessToken });
 
         const drive = google.drive({ version: "v3", auth });
         const docs = google.docs({ version: "v1", auth });
 
-        // Step 1: Create Drive folder
+        // Step 1: Create Drive folder in USER'S Drive
         const folderResponse = await drive.files.create({
             requestBody: {
                 name: folderName,
@@ -62,24 +61,24 @@ export async function POST(request: Request) {
 
         const results: Record<string, { id: string; link: string; name: string }> = {};
 
-        // Step 2: Create Google Doc with docText
-        const docResponse = await docs.documents.create({
+        // Step 2: Create Google Doc using Drive API (works for service accounts, avoid capstone creation fail issue)
+        const docResponse = await drive.files.create({
             requestBody: {
-                title: `${typedManifest.title} - Project Plan`,
+                name: `${typedManifest.title} - Project Plan`,
+                mimeType: "application/vnd.google-apps.document",
+                parents: [folderId], // Create directly in folder
             },
+            fields: "id, name, webViewLink",
         });
 
-        const docId = docResponse.data.documentId;
+        const docId = docResponse.data.id;
         if (!docId) {
             throw new Error("Failed to create document");
         }
 
-        // Move doc to folder
-        await drive.files.update({
-            fileId: docId,
-            addParents: folderId,
-            fields: "id",
-        });
+        // No need to move doc - it's already in the folder
+        // Remove the move operation:
+        // await drive.files.update({...})
 
         // Insert text content using batchUpdate
         const docText = typedManifest.content.docText || formatManifestAsText(typedManifest);
