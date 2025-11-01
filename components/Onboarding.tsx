@@ -9,8 +9,13 @@ export default function Onboarding({ user }: OnboardingProps) {
   const [name, setName] = useState<string>(user.name || "");
 
   const handleContinue = () => {
-    // Only saving their name if provided, otherwise just go to chat, I might make name required later, but for now, optional.
-    const onboardingData = name ? { name } : {};
+    // Name is required for onboarding. 
+    // likely will add other fields like CTE path etc upfront to help with llm context.
+    if (!name.trim()) {
+      return;
+    }
+
+    const onboardingData = { name };
     sessionStorage.setItem("onboarding", JSON.stringify(onboardingData));
     router.push("/chat");
   };

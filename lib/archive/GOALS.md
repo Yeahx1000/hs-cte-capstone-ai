@@ -1,5 +1,8 @@
 # Goals
 
+> [!IMPORTANT]
+> Not using this anymore so stshing it in archive folder, because ¯\_(ツ)_/¯. 
+
 I'll use this file to keep track of the end goals of this project. The file will be updating as things change, check commit history for previous versions I suppose?
 
 ## initial architecture thoughts

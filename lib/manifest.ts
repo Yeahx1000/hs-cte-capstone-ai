@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-// I'm using Zod for data validation, reason? Typescript first approach, this is the schema for the manifest
+// I'm using Zod for data validation. 
+// Reason? Typescript first approach, this is the schema for the manifest
 
 export const TimelinePhaseSchema = z.object({
     phase: z.string(),

@@ -6,12 +6,10 @@ import { OAuth2Client } from "google-auth-library";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Capstone creation route
+
 // This route handles the creation of the capstone files in Google Drive, 
 // it creates the files in Google Drive, and returns the links to the files.
-// 
-
-// FIXME: the setup has is trying to use the app service account, which results in a 403 drive full error,
-// so we're using the user's access token instead to access their personal drive.
 
 export async function POST(request: Request) {
     try {
@@ -76,10 +74,6 @@ export async function POST(request: Request) {
             throw new Error("Failed to create document");
         }
 
-        // No need to move doc - it's already in the folder
-        // Remove the move operation:
-        // await drive.files.update({...})
-
         // Insert text content using batchUpdate
         const docText = typedManifest.content.docText || formatManifestAsText(typedManifest);
         const paragraphs = docText.split("\n").filter((line) => line.trim());
@@ -93,7 +87,7 @@ export async function POST(request: Request) {
             },
         }));
 
-        // Actually, let's use a simpler approach - insert all text at once
+        // Actually, let's use a simpler approach, insert all text at once
         await docs.documents.batchUpdate({
             documentId: docId,
             requestBody: {
@@ -147,81 +141,25 @@ export async function POST(request: Request) {
 function formatManifestAsText(manifest: CapstoneManifest): string {
     return `# ${manifest.title}
 
-## CTE Pathway
-${manifest.ctePathway}
+        ## CTE Pathway
+        ${manifest.ctePathway}
 
-## Objectives
-${manifest.objectives.map((obj) => `• ${obj}`).join("\n")}
+        ## Objectives
+        ${manifest.objectives.map((obj) => `• ${obj}`).join("\n")}
 
-## Deliverables
-${manifest.deliverables.map((del) => `• ${del}`).join("\n")}
+        ## Deliverables
+        ${manifest.deliverables.map((del) => `• ${del}`).join("\n")}
 
-## Timeline
-${manifest.timeline.map((phase) => `
-### ${phase.phase} (${phase.weeks} weeks)
-${phase.tasks.map((task) => `• ${task}`).join("\n")}
-`).join("\n")}
+        ## Timeline
+        ${manifest.timeline.map((phase) => `
+        ### ${phase.phase} (${phase.weeks} weeks)
+        ${phase.tasks.map((task) => `• ${task}`).join("\n")}
+        `).join("\n")}
 
-## Assessment
-${manifest.assessment.map((ass) => `• ${ass}`).join("\n")}
+        ## Assessment
+        ${manifest.assessment.map((ass) => `• ${ass}`).join("\n")}
 
-## Resources
-${manifest.resources.map((res) => `• ${res}`).join("\n")}
-`;
+        ## Resources
+        ${manifest.resources.map((res) => `• ${res}`).join("\n")}
+    `;
 }
-
-function formatManifestAsCSV(manifest: CapstoneManifest): string[][] {
-    const rows: string[][] = [
-        ["Phase", "Weeks", "Task"],
-    ];
-
-    manifest.timeline.forEach((phase) => {
-        phase.tasks.forEach((task, index) => {
-            rows.push([
-                index === 0 ? phase.phase : "",
-                index === 0 ? phase.weeks.toString() : "",
-                task,
-            ]);
-        });
-    });
-
-    return rows;
-}
-
-function formatManifestAsSlides(manifest: CapstoneManifest): Array<{ title: string; content: string[] }> {
-    const slides: Array<{ title: string; content: string[] }> = [
-        {
-            title: manifest.title,
-            content: [`CTE Pathway: ${manifest.ctePathway}`],
-        },
-        {
-            title: "Objectives",
-            content: manifest.objectives,
-        },
-        {
-            title: "Deliverables",
-            content: manifest.deliverables,
-        },
-    ];
-
-    manifest.timeline.forEach((phase) => {
-        slides.push({
-            title: `${phase.phase} (${phase.weeks} weeks)`,
-            content: phase.tasks,
-        });
-    });
-
-    slides.push(
-        {
-            title: "Assessment",
-            content: manifest.assessment,
-        },
-        {
-            title: "Resources",
-            content: manifest.resources,
-        }
-    );
-
-    return slides;
-}
-

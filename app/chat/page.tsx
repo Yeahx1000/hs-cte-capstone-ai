@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Chat from "@/components/Chat";
-import SummaryCard from "@/components/SummaryCard";
 import UserMenu from "@/components/UserMenu";
 import { useChat } from "@/lib/hooks/useChat";
 
@@ -135,12 +134,6 @@ export default function ChatPage() {
                         </div>
                     )}
                 </div>
-                {/* 
-                <div className="w-80 shrink-0">
-                    <div className="sticky top-8">
-                        <SummaryCard manifest={manifest} />
-                    </div>
-                </div> */}
             </div>
         </div>
     );

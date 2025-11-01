@@ -4,7 +4,8 @@ import OpenAI from "openai";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// TODO: basic filler template for OpenAi API call, I'll need to expand this later
+// OpenAI API client
+// We need to mold the responses from llm better, right now they're... serviceable, but not great.
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,

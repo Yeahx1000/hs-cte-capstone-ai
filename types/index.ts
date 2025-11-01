@@ -54,10 +54,6 @@ export interface MessageInputProps {
     phase?: ConversationPhase;
 }
 
-export interface SummaryCardProps {
-    manifest: Manifest | null;
-}
-
 export interface UserMenuProps {
     user: User;
 }

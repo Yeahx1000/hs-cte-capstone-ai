@@ -4,8 +4,7 @@ import { google } from "googleapis";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// TODO: this is only a basic filler template for Google Drive API call, I'll expand on this later also
-
+// Google Drive API client
 
 export async function POST(request: Request) {
     try {
