@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { google } from "googleapis";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 // Google Drive API client
 

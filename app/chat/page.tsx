@@ -32,6 +32,12 @@ export default function ChatPage() {
         sendMessage(content, onboardingData);
     };
 
+    useEffect(() => {
+        if (conversationState?.phase === "review") {
+            router.prefetch("/review");
+        }
+    }, [conversationState?.phase, router]);
+
     if (!session?.user) {
         return null; // Will redirect via middleware
     }
@@ -76,55 +82,10 @@ export default function ChatPage() {
                                 Ready to review your capstone plan?
                             </p>
                             <button
-                                onClick={async () => {
-                                    if (reviewLoading) return;
-
-                                    setReviewLoading(true);
-                                    try {
-                                        // If we don't have a manifest yet, generate it first
-                                        if (!manifest) {
-                                            // Generate manifest from conversation
-                                            const conversationSummary = messages
-                                                .map((m) => `${m.role}: ${m.content}`)
-                                                .join("\n");
-
-                                            try {
-                                                const response = await fetch("/api/llm/plan", {
-                                                    method: "POST",
-                                                    headers: { "Content-Type": "application/json" },
-                                                    body: JSON.stringify({
-                                                        message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
-                                                        generateManifest: true,
-                                                        conversation: messages.map((m) => ({
-                                                            role: m.role,
-                                                            content: m.content,
-                                                        })),
-                                                    }),
-                                                });
-
-                                                if (response.ok) {
-                                                    const data = await response.json();
-                                                    sessionStorage.setItem("manifest", JSON.stringify(data));
-                                                    router.push("/review");
-                                                } else {
-                                                    throw new Error("Failed to generate manifest");
-                                                }
-                                            } catch (err) {
-                                                console.error("Failed to generate manifest:", err);
-                                                // Still navigate to review - maybe there's an existing manifest
-                                                router.push("/review");
-                                            }
-                                        } else {
-                                            router.push("/review");
-                                        }
-                                    } finally {
-                                        setReviewLoading(false);
-                                    }
-                                }}
-                                disabled={reviewLoading}
-                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                onClick={() => router.push("/review")}
+                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
                             >
-                                {reviewLoading ? "Loading..." : "Review Your Capstone Plan"}
+                                Review Your Capstone Plan
                             </button>
                         </div>
                     )}

@@ -51,7 +51,10 @@ describe("POST /api/llm/plan", () => {
 
     it("returns deterministic JSON template", async () => {
         const req = {
-            json: async () => ({ message: "Create a capstone for web dev" })
+            json: async () => ({
+                message: "Create a capstone for web dev",
+                generateManifest: true
+            })
         } as unknown as Request;
 
         const res = await POST(req);

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = "edge";
 
 // OpenAI API client
 // We need to mold the responses from llm better, right now they're... serviceable, but not great.
@@ -73,7 +72,6 @@ export async function POST(request: Request) {
                     { role: "user", content: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}` },
                 ],
                 response_format: { type: "json_object" },
-                seed: 42,
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
@@ -95,10 +93,60 @@ export async function POST(request: Request) {
             });
         }
 
-        // Hard cutoff: if turnCount >= MAX_TURNS, skip LLM call and return review message
+        // Hard cutoff: if turnCount >= MAX_TURNS, generate manifest and return it
         if (currentTurnCount >= MAX_TURNS && currentPhase === "brainstorm") {
+            // Generate manifest immediately at cutoff to eliminate the extra round-trip
+            const conversationSummary = conversation && Array.isArray(conversation)
+                ? conversation.map((m: { role: string; content: string }) => `${m.role}: ${m.content}`).join("\n")
+                : message;
+
+            const system = [
+                "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
+                "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
+                "Based on the conversation, generate a complete capstone project manifest in JSON format.",
+                "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
+                "Return ONLY valid JSON with this structure:",
+                "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
+                JSON.stringify({
+                    title: "string",
+                    ctePathway: "string",
+                    objectives: ["string"],
+                    deliverables: ["string"],
+                    timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
+                    assessment: ["string"],
+                    resources: ["string"],
+                    content: {
+                        docText: "string - formatted text content for Google Docs",
+                        csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
+                        slideOutline: [{ title: "string", content: ["string"] }],
+                    },
+                }),
+            ].join("\n");
+
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                temperature: 0,
+                messages: [
+                    { role: "system", content: system },
+                    { role: "user", content: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}` },
+                ],
+                response_format: { type: "json_object" },
+            });
+
+            const content = response.choices[0]?.message?.content ?? "{}";
+            let parsed: Record<string, unknown>;
+            try {
+                const temp = JSON.parse(content);
+                if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
+                    return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
+                }
+                parsed = temp as Record<string, unknown>;
+            } catch {
+                return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
+            }
+
             return NextResponse.json({
-                response: "Let's finalize your capstone plan. Ready to review your project?",
+                ...parsed,
                 phase: "review",
                 turnCount: MAX_TURNS,
             });
@@ -158,7 +206,6 @@ export async function POST(request: Request) {
                 temperature: 0,
                 messages,
                 response_format: { type: "json_object" },
-                seed: 42,
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
@@ -216,7 +263,7 @@ export async function POST(request: Request) {
 
             const response = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
-                temperature: 0.7,
+                temperature: 0.2,
                 messages,
             });
 

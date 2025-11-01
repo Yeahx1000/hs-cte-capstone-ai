@@ -4,7 +4,6 @@ import { CapstoneManifest } from "@/types";
 import { OAuth2Client } from "google-auth-library";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 // Capstone creation route
 
@@ -76,18 +75,6 @@ export async function POST(request: Request) {
 
         // Insert text content using batchUpdate
         const docText = typedManifest.content.docText || formatManifestAsText(typedManifest);
-        const paragraphs = docText.split("\n").filter((line) => line.trim());
-
-        const insertTextRequests = paragraphs.map((paragraph, index) => ({
-            insertText: {
-                location: {
-                    index: index * 100, // Approximate index for each paragraph
-                },
-                text: paragraph + "\n",
-            },
-        }));
-
-        // Actually, let's use a simpler approach, insert all text at once
         await docs.documents.batchUpdate({
             documentId: docId,
             requestBody: {
@@ -102,28 +89,17 @@ export async function POST(request: Request) {
             },
         });
 
-        // Get doc share link
-        const docFile = await drive.files.get({
-            fileId: docId,
-            fields: "webViewLink",
-        });
-
+        // Build results using data already returned from files.create calls
         results.doc = {
             id: docId,
-            link: docFile.data.webViewLink || `https://docs.google.com/document/d/${docId}/edit`,
+            link: docResponse.data.webViewLink || `https://docs.google.com/document/d/${docId}/edit`,
             name: `${typedManifest.title} - Project Plan`,
         };
-
-        // Get folder share link
-        const folderFile = await drive.files.get({
-            fileId: folderId,
-            fields: "webViewLink",
-        });
 
         return NextResponse.json({
             success: true,
             folderId,
-            folderLink: folderFile.data.webViewLink || `https://drive.google.com/drive/folders/${folderId}`,
+            folderLink: folderResponse.data.webViewLink || `https://drive.google.com/drive/folders/${folderId}`,
             files: {
                 doc: results.doc,  // Only return the doc
             },
