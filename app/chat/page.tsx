@@ -6,12 +6,15 @@ import Chat from "@/components/Chat";
 import UserMenu from "@/components/UserMenu";
 import { useChat } from "@/lib/hooks/useChat";
 
+// FIXME: this page is a bit of a mess, handling of manifest generation is slow and clunky, needs major optimization.
+
 export default function ChatPage() {
     const router = useRouter();
     const { data: session } = useSession();
-    const { messages, loading, error, manifest, sendMessage, conversationState } = useChat();
+    const { messages, loading, error, manifest, sendMessage, conversationState, generateManifest } = useChat();
     const [onboardingData, setOnboardingData] = useState<any>(null);
     const [reviewLoading, setReviewLoading] = useState(false);
+    const [manifestGenerating, setManifestGenerating] = useState(false);
 
     useEffect(() => {
         // Get onboarding data from sessionStorage (optional)
@@ -26,17 +29,57 @@ export default function ChatPage() {
         }
     }, [router]);
 
-    // Display a helpful first message in the UI until user sends a message. Working on this for now, something that can guide the students first prompt.
-
-    const handleSendMessage = (content: string) => {
-        sendMessage(content, onboardingData);
-    };
+    // Auto-generate manifest when phase becomes "review" and manifest doesn't exist
+    useEffect(() => {
+        if (conversationState?.phase === "review" && !manifest && !manifestGenerating && !loading && messages.length > 0) {
+            const storedManifest = sessionStorage.getItem("manifest");
+            if (!storedManifest) {
+                setManifestGenerating(true);
+                generateManifest()
+                    .then(() => {
+                        setManifestGenerating(false);
+                    })
+                    .catch(() => {
+                        setManifestGenerating(false);
+                    });
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationState?.phase, manifest, manifestGenerating, loading, messages.length]);
 
     useEffect(() => {
         if (conversationState?.phase === "review") {
             router.prefetch("/review");
         }
     }, [conversationState?.phase, router]);
+
+    // Display a helpful first message in the UI until user sends a message. Working on this for now, something that can guide the students first prompt.
+
+    const handleSendMessage = (content: string) => {
+        sendMessage(content, onboardingData);
+    };
+
+    const handleReviewClick = async () => {
+        // Ensure manifest exists before navigating
+        const storedManifest = sessionStorage.getItem("manifest");
+        if (!storedManifest && !manifest && messages.length > 0) {
+            setReviewLoading(true);
+            try {
+                const generated = await generateManifest();
+                if (generated) {
+                    router.push("/review");
+                } else {
+                    alert("Failed to generate capstone plan. Please try again.");
+                }
+            } catch (err) {
+                alert("Failed to generate capstone plan. Please try again.");
+            } finally {
+                setReviewLoading(false);
+            }
+        } else {
+            router.push("/review");
+        }
+    };
 
     if (!session?.user) {
         return null; // Will redirect via middleware
@@ -82,10 +125,13 @@ export default function ChatPage() {
                                 Ready to review your capstone plan?
                             </p>
                             <button
-                                onClick={() => router.push("/review")}
-                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                                onClick={handleReviewClick}
+                                disabled={reviewLoading || manifestGenerating}
+                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Review Your Capstone Plan
+                                {reviewLoading || manifestGenerating
+                                    ? "Generating Plan..."
+                                    : "Review Your Capstone Plan"}
                             </button>
                         </div>
                     )}

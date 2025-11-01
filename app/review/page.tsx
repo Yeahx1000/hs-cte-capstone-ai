@@ -13,14 +13,97 @@ export default function ReviewPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Get manifest from sessionStorage or generate it
-        const stored = sessionStorage.getItem("manifest");
-        if (stored) {
-            setManifest(JSON.parse(stored));
-        } else {
-            // If no manifest, redirect to chat
-            router.push("/chat");
-        }
+        let redirectTimeout: NodeJS.Timeout | null = null;
+        let cancelled = false;
+
+        const initializeManifest = async () => {
+            // First, check if manifest exists in sessionStorage
+            const stored = sessionStorage.getItem("manifest");
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    // Validate manifest has required fields
+                    if (parsed && parsed.title && parsed.ctePathway) {
+                        setManifest(parsed);
+                        return;
+                    }
+                } catch {
+                    // Invalid manifest, will generate new one
+                }
+            }
+
+            // If no valid manifest, try to generate from conversation
+            const messages = sessionStorage.getItem("messages");
+            if (messages) {
+                try {
+                    const parsedMessages = JSON.parse(messages);
+                    if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+                        setLoading(true);
+                        setError(null);
+
+                        // Generate manifest from conversation
+                        const conversationSummary = parsedMessages
+                            .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
+                            .join("\n");
+
+                        const response = await fetch("/api/llm/plan", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
+                                generateManifest: true,
+                            }),
+                        });
+
+                        if (cancelled) return;
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data && data.title && data.ctePathway) {
+                                setManifest(data);
+                                sessionStorage.setItem("manifest", JSON.stringify(data));
+                                setLoading(false);
+                                return;
+                            } else {
+                                setError("Generated manifest is missing required fields");
+                            }
+                        } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            setError(errorData.error || "Failed to generate manifest");
+                        }
+                        setLoading(false);
+                    } else {
+                        setError("No conversation messages found");
+                    }
+                } catch (err) {
+                    if (cancelled) return;
+                    console.error("Failed to generate manifest:", err);
+                    setError(err instanceof Error ? err.message : "An error occurred");
+                    setLoading(false);
+                }
+            } else {
+                setError("No conversation found");
+            }
+
+            // Wait a bit before redirecting to give user feedback
+            if (!cancelled) {
+                redirectTimeout = setTimeout(() => {
+                    if (!cancelled) {
+                        router.push("/chat");
+                    }
+                }, 2000);
+            }
+        };
+
+        initializeManifest();
+
+        // Cleanup function returned directly from useEffect
+        return () => {
+            cancelled = true;
+            if (redirectTimeout) {
+                clearTimeout(redirectTimeout);
+            }
+        };
     }, [router]);
 
     const handleEdit = (field: keyof Manifest, value: any) => {
@@ -46,7 +129,7 @@ export default function ReviewPage() {
             // Create capstone files in Google Drive
             const response = await fetch("/api/capstone/create", {
                 method: "POST",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
                     // Pass the user's access token
                     "Authorization": `Bearer ${(session as any).accessToken}`,
@@ -84,7 +167,24 @@ export default function ReviewPage() {
     if (!manifest) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+                <div className="text-center max-w-md px-4">
+                    <p className="text-gray-500 dark:text-gray-400 mb-2">
+                        {loading ? "Generating your capstone plan..." : error ? "Failed to load plan" : "Loading..."}
+                    </p>
+                    {loading && (
+                        <div className="mt-4 flex justify-center gap-1">
+                            <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                            <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                            <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-2">Redirecting to chat...</p>
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
