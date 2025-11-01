@@ -1,7 +1,49 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import { MessageHistoryProps } from "@/types";
 
 function MessageHistory({ messages, loading }: MessageHistoryProps) {
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+    const messagesLengthRef = useRef(messages.length);
+
+    // logic to auto-scroll to bottom on new responses, QOL feature.
+    const isNearBottom = () => {
+        const container = scrollContainerRef.current;
+        if (!container) return true;
+
+        const threshold = 150; // pixels from bottom
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        return distanceFromBottom < threshold;
+    };
+
+    const handleScroll = () => {
+        if (isNearBottom()) {
+            setShouldAutoScroll(true);
+        } else {
+            setShouldAutoScroll(false);
+        }
+    };
+
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        const messagesIncreased = messages.length > messagesLengthRef.current;
+        messagesLengthRef.current = messages.length;
+
+        if (messagesIncreased || loading) {
+            if (shouldAutoScroll || isNearBottom()) {
+                requestAnimationFrame(() => {
+                    if (container) {
+                        container.scrollTop = container.scrollHeight;
+                        setShouldAutoScroll(true);
+                    }
+                });
+            }
+        }
+    }, [messages.length, loading, shouldAutoScroll]);
+
     if (messages.length === 0) {
         return (
             <div className="h-full min-h-[400px] flex items-center justify-center py-8 px-8">
@@ -18,7 +60,11 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
     }
 
     return (
-        <div className="h-full overflow-y-auto px-8 py-8 min-h-[400px]">
+        <div
+            ref={scrollContainerRef}
+            className="h-full overflow-y-auto px-8 py-8 min-h-[400px]"
+            onScroll={handleScroll}
+        >
             <div className="flex flex-col gap-4">
                 {messages.map((message, idx) => (
                     <div
