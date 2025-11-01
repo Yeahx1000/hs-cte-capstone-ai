@@ -245,120 +245,181 @@ export default function ReviewPage() {
                     </p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-8">
+                    {/* Project Title Section */}
                     <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Project Title
-                        </label>
-                        <input
-                            type="text"
-                            value={manifest.title}
-                            onChange={(e) => handleEdit("title", e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                        />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            PROJECT TITLE
+                        </h2>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={manifest.title}
+                                onChange={(e) => handleEdit("title", e.target.value)}
+                                className="w-full px-4 py-3 pr-20 text-lg font-medium border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                placeholder="Enter project title"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
+                                ✓ Editable
+                            </span>
+                        </div>
                     </div>
 
+                    {/* CTE Pathway Section */}
                     <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            CTE Pathway
-                        </label>
-                        <input
-                            type="text"
-                            value={manifest.ctePathway}
-                            onChange={(e) => handleEdit("ctePathway", e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                        />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            PATHWAY ALIGNMENT
+                        </h2>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                                CTE Pathway:
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={manifest.ctePathway}
+                                    onChange={(e) => handleEdit("ctePathway", e.target.value)}
+                                    className="w-full px-4 py-3 pr-20 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                    placeholder="Enter CTE pathway"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
+                                    ✓ Editable
+                                </span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            Note: This capstone is the final course in a 2-3 course CTE sequence. A grade of C- or better marks a CTE Pathway Completer.
+                        </p>
                     </div>
 
+                    {/* Objectives Section */}
                     <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                            Objectives
-                        </label>
-                        <div className="space-y-2">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            OBJECTIVES
+                        </h2>
+                        <div className="space-y-3">
                             {manifest.objectives.map((obj, idx) => (
-                                <input
-                                    key={idx}
-                                    type="text"
-                                    value={obj}
-                                    onChange={(e) => {
-                                        const newObjectives = [...manifest.objectives];
-                                        newObjectives[idx] = e.target.value;
-                                        handleEdit("objectives", newObjectives);
-                                    }}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                                />
+                                <div key={idx} className="relative flex items-center gap-3">
+                                    <span className="text-gray-600 dark:text-gray-400 text-lg">•</span>
+                                    <input
+                                        type="text"
+                                        value={obj}
+                                        onChange={(e) => {
+                                            const newObjectives = [...manifest.objectives];
+                                            newObjectives[idx] = e.target.value;
+                                            handleEdit("objectives", newObjectives);
+                                        }}
+                                        className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                        placeholder="Enter objective"
+                                    />
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                        ✓ Editable
+                                    </span>
+                                </div>
                             ))}
                         </div>
                     </div>
 
+                    {/* Deliverables Section */}
                     <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                            Deliverables
-                        </label>
-                        <div className="space-y-2">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            DELIVERABLES (Product + Process Bundle)
+                        </h2>
+                        <div className="space-y-3">
                             {manifest.deliverables.map((del, idx) => (
-                                <input
-                                    key={idx}
-                                    type="text"
-                                    value={del}
-                                    onChange={(e) => {
-                                        const newDeliverables = [...manifest.deliverables];
-                                        newDeliverables[idx] = e.target.value;
-                                        handleEdit("deliverables", newDeliverables);
-                                    }}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                                />
+                                <div key={idx} className="relative flex items-center gap-3">
+                                    <span className="text-gray-600 dark:text-gray-400 text-lg">•</span>
+                                    <input
+                                        type="text"
+                                        value={del}
+                                        onChange={(e) => {
+                                            const newDeliverables = [...manifest.deliverables];
+                                            newDeliverables[idx] = e.target.value;
+                                            handleEdit("deliverables", newDeliverables);
+                                        }}
+                                        className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                        placeholder="Enter deliverable"
+                                    />
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                        ✓ Editable
+                                    </span>
+                                </div>
                             ))}
                         </div>
                     </div>
 
+                    {/* Timeline Section */}
                     <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                            Timeline
-                        </label>
-                        <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                            TIMELINE
+                        </h2>
+                        <div className="space-y-6">
                             {manifest.timeline.map((phase, phaseIdx) => (
-                                <div key={phaseIdx} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
-                                        <input
-                                            type="text"
-                                            value={phase.phase}
-                                            onChange={(e) => {
-                                                const newTimeline = [...manifest.timeline];
-                                                newTimeline[phaseIdx] = { ...phase, phase: e.target.value };
-                                                handleEdit("timeline", newTimeline);
-                                            }}
-                                            placeholder="Phase name"
-                                            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                                        />
-                                        <input
-                                            type="number"
-                                            value={phase.weeks}
-                                            onChange={(e) => {
-                                                const newTimeline = [...manifest.timeline];
-                                                newTimeline[phaseIdx] = { ...phase, weeks: parseInt(e.target.value) || 0 };
-                                                handleEdit("timeline", newTimeline);
-                                            }}
-                                            placeholder="Weeks"
-                                            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        {phase.tasks.map((task, taskIdx) => (
+                                <div key={phaseIdx} className="border-2 border-gray-300 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-[#171717]">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="flex-1 relative">
+                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                                Phase Name
+                                            </label>
                                             <input
-                                                key={taskIdx}
                                                 type="text"
-                                                value={task}
+                                                value={phase.phase}
                                                 onChange={(e) => {
                                                     const newTimeline = [...manifest.timeline];
-                                                    const newTasks = [...phase.tasks];
-                                                    newTasks[taskIdx] = e.target.value;
-                                                    newTimeline[phaseIdx] = { ...phase, tasks: newTasks };
+                                                    newTimeline[phaseIdx] = { ...phase, phase: e.target.value };
                                                     handleEdit("timeline", newTimeline);
                                                 }}
-                                                placeholder="Task"
-                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500"
+                                                placeholder="Enter phase name"
+                                                className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
                                             />
+                                        </div>
+                                        <div className="w-24 relative">
+                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                                Duration
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={phase.weeks}
+                                                    onChange={(e) => {
+                                                        const newTimeline = [...manifest.timeline];
+                                                        newTimeline[phaseIdx] = { ...phase, weeks: parseInt(e.target.value) || 0 };
+                                                        handleEdit("timeline", newTimeline);
+                                                    }}
+                                                    placeholder="0"
+                                                    className="w-full px-4 py-2 pr-8 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                                    weeks
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="ml-2 border-l-2 border-gray-300 dark:border-gray-700 pl-4 space-y-2">
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                                            Tasks:
+                                        </label>
+                                        {phase.tasks.map((task, taskIdx) => (
+                                            <div key={taskIdx} className="relative flex items-center gap-3">
+                                                <span className="text-gray-600 dark:text-gray-400">  •</span>
+                                                <input
+                                                    type="text"
+                                                    value={task}
+                                                    onChange={(e) => {
+                                                        const newTimeline = [...manifest.timeline];
+                                                        const newTasks = [...phase.tasks];
+                                                        newTasks[taskIdx] = e.target.value;
+                                                        newTimeline[phaseIdx] = { ...phase, tasks: newTasks };
+                                                        handleEdit("timeline", newTimeline);
+                                                    }}
+                                                    placeholder="Enter task"
+                                                    className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                                />
+                                                <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                                    ✓ Editable
+                                                </span>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>

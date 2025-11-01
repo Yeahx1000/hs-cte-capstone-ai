@@ -111,7 +111,7 @@ export default function ChatPage() {
                         </p>
                     </div>
                     {showOnboardingMessage && (
-                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-800 dark:text-blue-200 transition-opacity shrink-0">
+                        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-gray-200 transition-opacity shrink-0">
                             Tell Capris what you think could be a cool career or what you'd like to do for work if you could have any job.
                         </div>
                     )}
@@ -124,8 +124,8 @@ export default function ChatPage() {
                         />
                     </div>
                     {conversationState?.phase === "review" && !loading && (
-                        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg shrink-0">
-                            <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
+                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg shrink-0">
+                            <p className="text-sm text-gray-800 dark:text-gray-200 mb-3">
                                 Ready to review your capstone plan?
                             </p>
                             <button
