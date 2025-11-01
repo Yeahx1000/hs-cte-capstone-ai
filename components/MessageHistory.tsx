@@ -10,7 +10,7 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
 
     // Typing animation for the initial message
     const initialMessage = "Share your dream career or passion, and I'll help you build a capstone project around it!";
-    const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0, true);
+    const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0);
 
     // logic to auto-scroll to bottom on new responses, QOL feature.
     const isNearBottom = () => {
