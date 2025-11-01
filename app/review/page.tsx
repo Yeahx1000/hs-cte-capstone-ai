@@ -435,21 +435,15 @@ export default function ReviewPage() {
 
                     <div className="flex gap-4">
                         <button
-                            onClick={() => router.back()}
-                            className="px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                        >
-                            Back to Chat
-                        </button>
-                        <button
                             onClick={handleSave}
-                            className="px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                            className="cursor-pointer px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         >
                             Save Changes
                         </button>
                         <button
                             onClick={handleCreateInDrive}
                             disabled={loading}
-                            className="flex-1 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="cursor-pointer flex-1 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                             {loading ? "Creating..." : "Create in Drive"}
                         </button>
