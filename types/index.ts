@@ -47,6 +47,51 @@ export interface CapstoneContent {
     slideOutline: Array<{ title: string; content: string[] }>;
 }
 
+// CA Capstone Framework Types
+export interface ProjectProposal {
+    problemOpportunity?: string;
+    industryContext?: string;
+    endUser?: string;
+    successCriteria?: string[];
+    mentor?: string;
+}
+
+export interface WorkBasedLearning {
+    activityType?: "professional-interview" | "job-shadow" | "internship" | "youth-apprenticeship" | "on-the-job-training" | "other";
+    hours?: number;
+    description?: string;
+    artifacts?: string[];
+}
+
+export interface DeliverablesDetail {
+    technicalProduct?: string;
+    processEvidence?: string[];
+    industryFeedback?: string;
+    standardsMap?: string[];
+}
+
+export interface PublicPresentation {
+    duration?: string;
+    panelMembers?: string[];
+    rubricCriteria?: string[];
+}
+
+export interface ReflectionPostsecondary {
+    reflection?: string;
+    coursework?: string[];
+    training?: string[];
+    credentials?: string[];
+    apprenticeship?: string[];
+    collegeMajor?: string[];
+}
+
+export interface CapstoneRubric {
+    technicalQuality?: string[];
+    workBasedIntegration?: string[];
+    communicationProfessionalism?: string[];
+    reflectionNextSteps?: string[];
+}
+
 export interface CapstoneManifest {
     title: string;
     ctePathway: string;
@@ -56,4 +101,11 @@ export interface CapstoneManifest {
     assessment: string[];
     resources: string[];
     content: CapstoneContent;
+    // CA Framework extensions (optional for backward compatibility)
+    projectProposal?: ProjectProposal;
+    workBasedLearning?: WorkBasedLearning;
+    deliverablesDetail?: DeliverablesDetail;
+    publicPresentation?: PublicPresentation;
+    reflectionPostsecondary?: ReflectionPostsecondary;
+    rubric?: CapstoneRubric;
 }

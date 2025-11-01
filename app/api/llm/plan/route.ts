@@ -44,8 +44,16 @@ export async function POST(request: Request) {
             const system = [
                 "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
                 "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format.",
+                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
                 "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
+                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
+                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
+                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
+                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
+                "- publicPresentation: duration, panel members, rubric criteria",
+                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
+                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
+                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
                 "Return ONLY valid JSON with this structure:",
                 "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
                 JSON.stringify({
@@ -56,6 +64,44 @@ export async function POST(request: Request) {
                     timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
                     assessment: ["string"],
                     resources: ["string"],
+                    projectProposal: {
+                        problemOpportunity: "string",
+                        industryContext: "string",
+                        endUser: "string",
+                        successCriteria: ["string"],
+                        mentor: "string"
+                    },
+                    workBasedLearning: {
+                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
+                        hours: 0,
+                        description: "string",
+                        artifacts: ["string"]
+                    },
+                    deliverablesDetail: {
+                        technicalProduct: "string",
+                        processEvidence: ["string"],
+                        industryFeedback: "string",
+                        standardsMap: ["string"]
+                    },
+                    publicPresentation: {
+                        duration: "string",
+                        panelMembers: ["string"],
+                        rubricCriteria: ["string"]
+                    },
+                    reflectionPostsecondary: {
+                        reflection: "string",
+                        coursework: ["string"],
+                        training: ["string"],
+                        credentials: ["string"],
+                        apprenticeship: ["string"],
+                        collegeMajor: ["string"]
+                    },
+                    rubric: {
+                        technicalQuality: ["string"],
+                        workBasedIntegration: ["string"],
+                        communicationProfessionalism: ["string"],
+                        reflectionNextSteps: ["string"]
+                    },
                     content: {
                         docText: "string - formatted text content for Google Docs",
                         csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
@@ -108,8 +154,16 @@ export async function POST(request: Request) {
             const system = [
                 "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
                 "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format.",
+                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
                 "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
+                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
+                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
+                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
+                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
+                "- publicPresentation: duration, panel members, rubric criteria",
+                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
+                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
+                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
                 "Return ONLY valid JSON with this structure:",
                 "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
                 JSON.stringify({
@@ -120,6 +174,44 @@ export async function POST(request: Request) {
                     timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
                     assessment: ["string"],
                     resources: ["string"],
+                    projectProposal: {
+                        problemOpportunity: "string",
+                        industryContext: "string",
+                        endUser: "string",
+                        successCriteria: ["string"],
+                        mentor: "string"
+                    },
+                    workBasedLearning: {
+                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
+                        hours: 0,
+                        description: "string",
+                        artifacts: ["string"]
+                    },
+                    deliverablesDetail: {
+                        technicalProduct: "string",
+                        processEvidence: ["string"],
+                        industryFeedback: "string",
+                        standardsMap: ["string"]
+                    },
+                    publicPresentation: {
+                        duration: "string",
+                        panelMembers: ["string"],
+                        rubricCriteria: ["string"]
+                    },
+                    reflectionPostsecondary: {
+                        reflection: "string",
+                        coursework: ["string"],
+                        training: ["string"],
+                        credentials: ["string"],
+                        apprenticeship: ["string"],
+                        collegeMajor: ["string"]
+                    },
+                    rubric: {
+                        technicalQuality: ["string"],
+                        workBasedIntegration: ["string"],
+                        communicationProfessionalism: ["string"],
+                        reflectionNextSteps: ["string"]
+                    },
                     content: {
                         docText: "string - formatted text content for Google Docs",
                         csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
@@ -171,10 +263,18 @@ export async function POST(request: Request) {
                 "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
                 "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
                 "start by giving a list of CTE pathways and their descriptions, then ask the student what they are interested in, then help them choose a pathway based on their interests and skills.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format.",
+                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
                 "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
+                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
+                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
+                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
+                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
+                "- publicPresentation: duration, panel members, rubric criteria",
+                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
+                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
+                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
                 "Return ONLY valid JSON with this structure:",
-                "IMPORTANT: answers should be brief, on sentence length if possible, concise, conversational and on point, don't be too verbose, rememebr these are for high school students, so keep it simple and easy to understand.",
+                "IMPORTANT: answers should be brief, on sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
                 "The goal is to get to providing a capstone template in max 10 prompts, preferably 5-7 prompts",
                 JSON.stringify({
                     title: "string",
@@ -184,6 +284,44 @@ export async function POST(request: Request) {
                     timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
                     assessment: ["string"],
                     resources: ["string"],
+                    projectProposal: {
+                        problemOpportunity: "string",
+                        industryContext: "string",
+                        endUser: "string",
+                        successCriteria: ["string"],
+                        mentor: "string"
+                    },
+                    workBasedLearning: {
+                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
+                        hours: 0,
+                        description: "string",
+                        artifacts: ["string"]
+                    },
+                    deliverablesDetail: {
+                        technicalProduct: "string",
+                        processEvidence: ["string"],
+                        industryFeedback: "string",
+                        standardsMap: ["string"]
+                    },
+                    publicPresentation: {
+                        duration: "string",
+                        panelMembers: ["string"],
+                        rubricCriteria: ["string"]
+                    },
+                    reflectionPostsecondary: {
+                        reflection: "string",
+                        coursework: ["string"],
+                        training: ["string"],
+                        credentials: ["string"],
+                        apprenticeship: ["string"],
+                        collegeMajor: ["string"]
+                    },
+                    rubric: {
+                        technicalQuality: ["string"],
+                        workBasedIntegration: ["string"],
+                        communicationProfessionalism: ["string"],
+                        reflectionNextSteps: ["string"]
+                    },
                     content: {
                         docText: "string - formatted text content for Google Docs",
                         csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
@@ -249,6 +387,14 @@ export async function POST(request: Request) {
                 "Your role is to guide students through planning their capstone project by asking thoughtful questions.",
                 "Keep responses conversational, friendly, and focused on CTE pathway topics.",
                 "Ask questions to understand their interests, skills, and goals.",
+                "",
+                "CRITICAL: You must guide students to provide information for comprehensive CTE capstone framework requirements:",
+                "1. Project Proposal: Ask about the problem/opportunity they want to address, industry context, who will use/benefit from their project, success criteria, and if they have a mentor.",
+                "2. Work-Based Learning: Ask what WBL activity they plan (professional interview, job shadow, internship, apprenticeship, on-the-job training), how many hours, and what artifacts they'll collect.",
+                "3. Deliverables: Ask about the specific technical product they'll create, what process evidence they'll document (research log, design notes, iterations), and how they'll get industry feedback.",
+                "4. Public Presentation: Ask about their panel presentation plans and who might be on the panel (industry rep, college rep, teacher).",
+                "5. Reflection & Postsecondary: Ask about their plans after high school (college major, training programs, credentials, apprenticeships).",
+                "Try to gather at least 2-3 of these framework elements during your questions before finalizing.",
                 "",
                 "STRICT RULE: You will ask the student up to 5 questions to clarify their project. After that, you MUST stop asking questions and output: 'Let's finalize your capstone plan. Ready to review your project?'",
                 "Do NOT continue the conversation or ask further questions after 5 questions.",
