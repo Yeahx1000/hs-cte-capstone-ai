@@ -14,7 +14,7 @@ const MAX_TURNS = 5; // Maximum number of assistant responses before moving to r
 
 export async function POST(request: Request) {
     try {
-        const { message, conversation, generateManifest, turnCount = 0, phase = "brainstorm" } = await request.json();
+        const { message, conversation, generateManifest, turnCount = 0, phase = "brainstorm", onboardingData } = await request.json();
 
         if (!message) {
             return NextResponse.json(
@@ -86,6 +86,11 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
 
+            // Ensure CTE pathway from onboarding is included if provided
+            if (onboardingData?.ctePathway && (!parsed.ctePathway || parsed.ctePathway !== onboardingData.ctePathway)) {
+                parsed.ctePathway = onboardingData.ctePathway;
+            }
+
             return NextResponse.json({
                 ...parsed,
                 phase: "complete",
@@ -143,6 +148,11 @@ export async function POST(request: Request) {
                 parsed = temp as Record<string, unknown>;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
+            }
+
+            // Ensure CTE pathway from onboarding is included if provided
+            if (onboardingData?.ctePathway && (!parsed.ctePathway || parsed.ctePathway !== onboardingData.ctePathway)) {
+                parsed.ctePathway = onboardingData.ctePathway;
             }
 
             return NextResponse.json({
@@ -209,11 +219,16 @@ export async function POST(request: Request) {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: unknown;
+            let parsed: any;
             try {
                 parsed = JSON.parse(content);
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
+            }
+
+            // Ensure CTE pathway from onboarding is included if provided
+            if (onboardingData?.ctePathway && (!parsed.ctePathway || parsed.ctePathway !== onboardingData.ctePathway)) {
+                parsed.ctePathway = onboardingData.ctePathway;
             }
 
             return NextResponse.json(parsed);

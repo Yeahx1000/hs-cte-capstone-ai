@@ -28,11 +28,31 @@ export const useChat = () => {
                 // Invalid data, use defaults
             }
         }
+
+        // Load messages from sessionStorage
+        const storedMessages = sessionStorage.getItem("messages");
+        if (storedMessages) {
+            try {
+                const parsed = JSON.parse(storedMessages);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setMessages(parsed);
+                }
+            } catch {
+                // Invalid data, use defaults
+            }
+        }
     }, []);
 
     useEffect(() => {
         sessionStorage.setItem("conversationState", JSON.stringify(conversationState));
     }, [conversationState]);
+
+    // Save messages to sessionStorage whenever they change
+    useEffect(() => {
+        if (messages.length > 0) {
+            sessionStorage.setItem("messages", JSON.stringify(messages));
+        }
+    }, [messages]);
 
     const sendMessage = useCallback(async (content: string, onboardingData?: any) => {
         if (!content.trim()) return;
@@ -55,10 +75,13 @@ export const useChat = () => {
                 content: m.content,
             }));
 
-            // Add onboarding data, name should be required.
+            // Add onboarding data.
             let messageContent = content;
             if (onboardingData && messages.length === 0 && onboardingData.name) {
-                messageContent = `The student's name is ${onboardingData.name}. They are a high school student. ${content}`;
+                const pathwayInfo = onboardingData.ctePathway
+                    ? `They have selected the CTE pathway: ${onboardingData.ctePathway}.`
+                    : "";
+                messageContent = `The student's name is ${onboardingData.name}. They are a high school student. ${pathwayInfo} ${content}`;
             } else if (messages.length === 0) {
                 // First message - assumes it's a high school student
                 messageContent = `You are talking to a high school student. ${content}`;
@@ -115,7 +138,7 @@ export const useChat = () => {
         }
     }, [messages, conversationState]);
 
-    const generateManifest = useCallback(async () => {
+    const generateManifest = useCallback(async (onboardingData?: any) => {
         setLoading(true);
         setError(null);
 
@@ -125,12 +148,20 @@ export const useChat = () => {
                 .map((m) => `${m.role}: ${m.content}`)
                 .join("\n");
 
+            // Include onboarding data, especially CTE pathway, in the manifest generation
+            let manifestPrompt = `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`;
+
+            if (onboardingData?.ctePathway) {
+                manifestPrompt = `The student has selected the CTE pathway: ${onboardingData.ctePathway}. ${manifestPrompt}`;
+            }
+
             const response = await fetch("/api/llm/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
+                    message: manifestPrompt,
                     generateManifest: true,
+                    onboardingData,
                 }),
             });
 
@@ -139,6 +170,12 @@ export const useChat = () => {
             }
 
             const data = await response.json();
+
+            // Ensure CTE pathway from onboarding is included if not in generated manifest
+            if (onboardingData?.ctePathway && (!data.ctePathway || data.ctePathway !== onboardingData.ctePathway)) {
+                data.ctePathway = onboardingData.ctePathway;
+            }
+
             setManifest(data);
             sessionStorage.setItem("manifest", JSON.stringify(data));
             return data;

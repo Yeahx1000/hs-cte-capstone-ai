@@ -60,13 +60,16 @@ export default function ChatPage() {
     };
 
     const handleReviewClick = async () => {
-        // Ensure manifest exists before navigating
-        const storedManifest = sessionStorage.getItem("manifest");
-        if (!storedManifest && !manifest && messages.length > 0) {
+        // Always regenerate manifest to ensure fresh data with onboarding CTE pathway
+        if (messages.length > 0) {
             setReviewLoading(true);
             try {
-                const generated = await generateManifest();
+                // Clear old manifest to force regeneration
+                sessionStorage.removeItem("manifest");
+                const generated = await generateManifest(onboardingData);
                 if (generated) {
+                    // Small delay to ensure sessionStorage is written
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     router.push("/review");
                 } else {
                     alert("Failed to generate capstone plan. Please try again.");
@@ -77,6 +80,7 @@ export default function ChatPage() {
                 setReviewLoading(false);
             }
         } else {
+            // No messages, just navigate - review page will handle it
             router.push("/review");
         }
     };

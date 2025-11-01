@@ -25,9 +25,9 @@ export async function POST(request: Request) {
             );
         }
 
-        if (!manifest || !manifest.title || !manifest.content) {
+        if (!manifest || !manifest.title) {
             return NextResponse.json(
-                { error: "Manifest with title and content is required" },
+                { error: "Manifest with title is required" },
                 { status: 400 }
             );
         }
@@ -74,7 +74,8 @@ export async function POST(request: Request) {
         }
 
         // Insert text content using batchUpdate
-        const docText = typedManifest.content.docText || formatManifestAsText(typedManifest);
+        // Always generate full template from manifest data to ensure all user input is included
+        const docText = formatManifestAsText(typedManifest);
         await docs.documents.batchUpdate({
             documentId: docId,
             requestBody: {
@@ -115,27 +116,76 @@ export async function POST(request: Request) {
 
 // Helper functions to format manifest as content
 function formatManifestAsText(manifest: CapstoneManifest): string {
-    return `# ${manifest.title}
+    const sections: string[] = [];
 
-        ## CTE Pathway
-        ${manifest.ctePathway}
+    // Title
+    sections.push(`${manifest.title}`);
+    sections.push(""); // Empty line
 
-        ## Objectives
-        ${manifest.objectives.map((obj) => `• ${obj}`).join("\n")}
+    // CTE Pathway
+    sections.push("CTE Pathway");
+    sections.push(manifest.ctePathway || "Not specified");
+    sections.push(""); // Empty line
 
-        ## Deliverables
-        ${manifest.deliverables.map((del) => `• ${del}`).join("\n")}
+    // Objectives
+    sections.push("Objectives");
+    if (manifest.objectives && manifest.objectives.length > 0) {
+        manifest.objectives.forEach((obj) => {
+            sections.push(`• ${obj}`);
+        });
+    } else {
+        sections.push("No objectives specified");
+    }
+    sections.push(""); // Empty line
 
-        ## Timeline
-        ${manifest.timeline.map((phase) => `
-        ### ${phase.phase} (${phase.weeks} weeks)
-        ${phase.tasks.map((task) => `• ${task}`).join("\n")}
-        `).join("\n")}
+    // Deliverables
+    sections.push("Deliverables");
+    if (manifest.deliverables && manifest.deliverables.length > 0) {
+        manifest.deliverables.forEach((del) => {
+            sections.push(`• ${del}`);
+        });
+    } else {
+        sections.push("No deliverables specified");
+    }
+    sections.push(""); // Empty line
 
-        ## Assessment
-        ${manifest.assessment.map((ass) => `• ${ass}`).join("\n")}
+    // Timeline
+    sections.push("Timeline");
+    if (manifest.timeline && manifest.timeline.length > 0) {
+        manifest.timeline.forEach((phase) => {
+            sections.push(`${phase.phase} (${phase.weeks} weeks)`);
+            if (phase.tasks && phase.tasks.length > 0) {
+                phase.tasks.forEach((task) => {
+                    sections.push(`  • ${task}`);
+                });
+            }
+            sections.push(""); // Empty line between phases
+        });
+    } else {
+        sections.push("No timeline specified");
+        sections.push(""); // Empty line
+    }
 
-        ## Resources
-        ${manifest.resources.map((res) => `• ${res}`).join("\n")}
-    `;
+    // Assessment
+    sections.push("Assessment");
+    if (manifest.assessment && manifest.assessment.length > 0) {
+        manifest.assessment.forEach((ass) => {
+            sections.push(`• ${ass}`);
+        });
+    } else {
+        sections.push("No assessment criteria specified");
+    }
+    sections.push(""); // Empty line
+
+    // Resources
+    sections.push("Resources");
+    if (manifest.resources && manifest.resources.length > 0) {
+        manifest.resources.forEach((res) => {
+            sections.push(`• ${res}`);
+        });
+    } else {
+        sections.push("No resources specified");
+    }
+
+    return sections.join("\n");
 }

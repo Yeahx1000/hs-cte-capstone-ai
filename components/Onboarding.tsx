@@ -3,19 +3,19 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { OnboardingProps } from "@/types";
+import { cteCareers } from "@/lib/data/cte-careers";
 
 export default function Onboarding({ user }: OnboardingProps) {
   const router = useRouter();
   const [name, setName] = useState<string>(user.name || "");
+  const [ctePathway, setCtePathway] = useState<string>("");
 
   const handleContinue = () => {
-    // Name is required for onboarding. 
-    // likely will add other fields like CTE path etc upfront to help with llm context.
-    if (!name.trim()) {
+    if (!name.trim() || !ctePathway) {
       return;
     }
 
-    const onboardingData = { name };
+    const onboardingData = { name, ctePathway };
     sessionStorage.setItem("onboarding", JSON.stringify(onboardingData));
     router.push("/chat");
   };
@@ -62,10 +62,37 @@ export default function Onboarding({ user }: OnboardingProps) {
             />
           </div>
 
+          <div>
+            <label
+              htmlFor="cte-pathway"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              CTE Pathway (required)
+            </label>
+            <select
+              id="cte-pathway"
+              required
+              value={ctePathway}
+              onChange={(e) => setCtePathway(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleContinue();
+                }
+              }}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#1E1E1E] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+            >
+              <option value="">Select your CTE pathway</option>
+              {cteCareers.map((career) => (
+                <option key={career.id} value={career.value}>
+                  {career.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
-            disabled={!name.trim()}
+            disabled={!name.trim() || !ctePathway}
             onClick={handleContinue}
-            className={`w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors ${!name.trim() ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            className={`w-full px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors ${!name.trim() || !ctePathway ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             Start Planning
           </button>

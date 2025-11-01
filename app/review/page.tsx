@@ -11,19 +11,40 @@ export default function ReviewPage() {
     const [manifest, setManifest] = useState<Manifest | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [studentName, setStudentName] = useState<string>("Student");
 
     useEffect(() => {
         let redirectTimeout: NodeJS.Timeout | null = null;
         let cancelled = false;
 
         const initializeManifest = async () => {
-            // First, check if manifest exists in sessionStorage
-            const stored = sessionStorage.getItem("manifest");
-            if (stored) {
+            // Get onboarding data to ensure CTE pathway is included
+            const onboardingDataStr = sessionStorage.getItem("onboarding");
+            let onboardingData: any = null;
+            if (onboardingDataStr) {
                 try {
-                    const parsed = JSON.parse(stored);
+                    onboardingData = JSON.parse(onboardingDataStr);
+                    // Set student name from onboarding data
+                    if (onboardingData?.name) {
+                        setStudentName(onboardingData.name);
+                    }
+                } catch {
+                    // Invalid onboarding data
+                }
+            }
+
+            // First check if manifest already exists (generated when clicking Review)
+            const storedManifest = sessionStorage.getItem("manifest");
+            if (storedManifest) {
+                try {
+                    const parsed = JSON.parse(storedManifest);
                     // Validate manifest has required fields
                     if (parsed && parsed.title && parsed.ctePathway) {
+                        // Ensure CTE pathway matches onboarding if provided
+                        if (onboardingData?.ctePathway && parsed.ctePathway !== onboardingData.ctePathway) {
+                            parsed.ctePathway = onboardingData.ctePathway;
+                            sessionStorage.setItem("manifest", JSON.stringify(parsed));
+                        }
                         setManifest(parsed);
                         return;
                     }
@@ -41,17 +62,24 @@ export default function ReviewPage() {
                         setLoading(true);
                         setError(null);
 
-                        // Generate manifest from conversation
+                        // Generate manifest from conversation with onboarding data
                         const conversationSummary = parsedMessages
                             .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
                             .join("\n");
+
+                        // Include onboarding CTE pathway in the prompt
+                        let manifestPrompt = `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`;
+                        if (onboardingData?.ctePathway) {
+                            manifestPrompt = `The student has selected the CTE pathway: ${onboardingData.ctePathway}. ${manifestPrompt}`;
+                        }
 
                         const response = await fetch("/api/llm/plan", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                message: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`,
+                                message: manifestPrompt,
                                 generateManifest: true,
+                                onboardingData,
                             }),
                         });
 
@@ -59,6 +87,12 @@ export default function ReviewPage() {
 
                         if (response.ok) {
                             const data = await response.json();
+                            
+                            // Ensure CTE pathway from onboarding is included if not in generated manifest
+                            if (onboardingData?.ctePathway && (!data.ctePathway || data.ctePathway !== onboardingData.ctePathway)) {
+                                data.ctePathway = onboardingData.ctePathway;
+                            }
+                            
                             if (data && data.title && data.ctePathway) {
                                 setManifest(data);
                                 sessionStorage.setItem("manifest", JSON.stringify(data));
@@ -136,7 +170,7 @@ export default function ReviewPage() {
                 },
                 body: JSON.stringify({
                     manifest,
-                    studentName: session.user.name || session.user.email || "Student",
+                    studentName: studentName,
                 }),
             });
 
