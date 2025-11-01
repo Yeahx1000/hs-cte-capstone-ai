@@ -15,6 +15,11 @@ export default function Onboarding({ user }: OnboardingProps) {
       return;
     }
 
+    // Clear previous chat history to start fresh
+    sessionStorage.removeItem("messages");
+    sessionStorage.removeItem("manifest");
+    sessionStorage.removeItem("conversationState");
+
     const onboardingData = { name, ctePathway };
     sessionStorage.setItem("onboarding", JSON.stringify(onboardingData));
     router.push("/chat");
