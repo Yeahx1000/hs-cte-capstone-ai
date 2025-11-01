@@ -40,10 +40,14 @@ export default function Onboarding({ user }: OnboardingProps) {
 
         <div className="w-full space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Your Name (required)
             </label>
             <input
+              autoComplete="off"
+              id="name"
               required
               type="text"
               value={name}

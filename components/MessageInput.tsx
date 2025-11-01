@@ -36,6 +36,7 @@ function MessageInput({ onSend, disabled = false, phase }: MessageInputProps) {
         <div className="w-full">
             <div className="flex items-end gap-3 bg-white dark:bg-[#171717] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-2 focus-within:border-gray-300 dark:focus-within:border-gray-700 transition-colors">
                 <textarea
+                    id="llm-mesage-input"
                     ref={textareaRef}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
