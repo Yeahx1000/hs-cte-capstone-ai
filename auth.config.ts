@@ -1,13 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
-// import Facebook from "next-auth/providers/facebook";
-// import Apple from "next-auth/providers/apple";
-// import EmailProvider from "next-auth/providers/email";
 
-
-// not needed, but added and commented out for future use, can add more providers later, 
-// for now we're only using Google
-
+// deleted commented out providers, can always just add them in a production environment.
 export const authConfig = {
     providers: [
         Google({
@@ -27,19 +21,7 @@ export const authConfig = {
                 },
             },
         }),
-        // Apple({
-        //     clientId: process.env.APPLE_ID,
-        //     clientSecret: process.env.APPLE_SECRET
-        // }),
-        // Facebook({
-        //     clientId: process.env.FACEBOOK_ID,
-        //     clientSecret: process.env.FACEBOOK_SECRET
-        // }),
-        // // Passwordless / email sign in
-        // EmailProvider({
-        //     server: process.env.MAIL_SERVER,
-        //     from: 'NextAuth.js <no-reply@example.com>'
-        // }),
+
     ],
     pages: {
         signIn: "/login",
@@ -53,12 +35,11 @@ export const authConfig = {
                 if (isLoggedIn) {
                     return Response.redirect(new URL("/", nextUrl));
                 }
-                return true; // Allow access to login page if not logged in
+                return true;
             }
 
-            // Protect all other routes
             if (!isLoggedIn) {
-                return false; // Redirect to login
+                return false;
             }
             return true;
         },
@@ -69,6 +50,59 @@ export const authConfig = {
                 token.refreshToken = account.refresh_token;
                 token.expiresAt = account.expires_at;
             }
+
+            // Check if token needs refresh
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            const skewedTimeBySecondsForClockDifferences = 90; // lol, sorry long variable name, but had to be done.
+            const expiryTime = typeof token.expiresAt === "number" ? token.expiresAt : 0;
+            const needsRefresh = !token.accessToken || expiryTime < (nowInSeconds + skewedTimeBySecondsForClockDifferences);
+
+            // Avoid thundering herd: prevent simultaneous refresh attempts
+            if (needsRefresh && token.refreshToken && !(token as any)._refreshing) {
+                (token as any)._refreshing = true;
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 5000);
+
+                    const res = await fetch("https://oauth2.googleapis.com/token", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams({
+                            client_id: process.env.GOOGLE_CLIENT_ID!,
+                            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+                            refresh_token: String(token.refreshToken),
+                            grant_type: "refresh_token",
+                        }),
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeout);
+
+                    const body = await res.json();
+
+                    if (res.ok && body.access_token) {
+                        token.accessToken = body.access_token;
+                        // Google returns expires_in in seconds
+                        token.expiresAt = Math.floor(Date.now() / 1000) + (Number(body.expires_in) || 3600);
+
+                        // Google may rotate refresh_token (rare). If present, update; else keep existing.
+                        if (body.refresh_token) token.refreshToken = body.refresh_token;
+                    } else {
+                        // Only clear refresh token on explicit revocation / invalid_grant
+                        const errorCode = body?.error;
+                        if (errorCode === "invalid_grant" || errorCode === "invalid_client") {
+                            token.accessToken = undefined;
+                            token.refreshToken = undefined; // force re-consent
+                            token.expiresAt = undefined;
+                        }
+                        // transient error: keep existing refresh token; let request fail upstream if access token expired
+                    }
+                } catch (error) {
+                    // network/timeout: keep refreshToken; do not nuke it
+                } finally {
+                    delete (token as any)._refreshing;
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
