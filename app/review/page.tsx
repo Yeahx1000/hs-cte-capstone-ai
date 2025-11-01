@@ -200,9 +200,9 @@ export default function ReviewPage() {
 
     if (!manifest) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-[#1A1A1A]">
                 <div className="text-center max-w-md px-4">
-                    <p className="text-gray-500 dark:text-gray-400 mb-2">
+                    <p className="text-gray-500 dark:text-gray-400 mb-2 font-light">
                         {loading ? "Generating your capstone plan..." : error ? "Failed to load plan" : "Loading..."}
                     </p>
                     {loading && (
@@ -213,9 +213,9 @@ export default function ReviewPage() {
                         </div>
                     )}
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                            <p className="text-xs text-red-500 dark:text-red-400 mt-2">Redirecting to homepage...</p>
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-light">Redirecting to homepage...</p>
                         </div>
                     )}
                 </div>
@@ -228,27 +228,29 @@ export default function ReviewPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-[#171717]">
-            <div className="w-full max-w-4xl mx-auto px-4 py-4">
-                <div className="flex justify-end mb-4">
+        <div className="flex flex-col min-h-screen bg-white dark:bg-[#1A1A1A]">
+            {/* Header */}
+            <div className="w-full px-6 py-4">
+                <div className="flex justify-end max-w-7xl mx-auto">
                     <UserMenu user={session.user} />
                 </div>
             </div>
 
-            <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {/* Main Content */}
+            <div className="flex-1 max-w-4xl mx-auto w-full px-6 pb-8">
+                <div className="mb-10">
+                    <h1 className="text-5xl font-light text-gray-900 dark:text-white mb-3">
                         Review Your Capstone Project
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <p className="text-lg text-gray-600 dark:text-gray-400 font-light">
                         Review and make any final edits before creating in Google Drive
                     </p>
                 </div>
 
                 <div className="space-y-8">
                     {/* Project Title Section */}
-                    <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                             PROJECT TITLE
                         </h2>
                         <div className="relative">
@@ -256,7 +258,7 @@ export default function ReviewPage() {
                                 type="text"
                                 value={manifest.title}
                                 onChange={(e) => handleEdit("title", e.target.value)}
-                                className="w-full px-4 py-3 pr-20 text-lg font-medium border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                className="w-full px-4 py-3 pr-20 text-lg font-light border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                 placeholder="Enter project title"
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -266,12 +268,12 @@ export default function ReviewPage() {
                     </div>
 
                     {/* CTE Pathway Section */}
-                    <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                             PATHWAY ALIGNMENT
                         </h2>
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <label className="block text-sm font-light text-gray-600 dark:text-gray-400 mb-2">
                                 CTE Pathway:
                             </label>
                             <div className="relative">
@@ -279,7 +281,7 @@ export default function ReviewPage() {
                                     type="text"
                                     value={manifest.ctePathway}
                                     onChange={(e) => handleEdit("ctePathway", e.target.value)}
-                                    className="w-full px-4 py-3 pr-20 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                    className="w-full px-4 py-3 pr-20 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                     placeholder="Enter CTE pathway"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -287,14 +289,14 @@ export default function ReviewPage() {
                                 </span>
                             </div>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-light">
                             Note: This capstone is the final course in a 2-3 course CTE sequence. A grade of C- or better marks a CTE Pathway Completer.
                         </p>
                     </div>
 
                     {/* Objectives Section */}
-                    <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                             OBJECTIVES
                         </h2>
                         <div className="space-y-3">
@@ -309,10 +311,10 @@ export default function ReviewPage() {
                                             newObjectives[idx] = e.target.value;
                                             handleEdit("objectives", newObjectives);
                                         }}
-                                        className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                         placeholder="Enter objective"
                                     />
-                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
                                         ✓ Editable
                                     </span>
                                 </div>
@@ -321,8 +323,8 @@ export default function ReviewPage() {
                     </div>
 
                     {/* Deliverables Section */}
-                    <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                             DELIVERABLES (Product + Process Bundle)
                         </h2>
                         <div className="space-y-3">
@@ -337,10 +339,10 @@ export default function ReviewPage() {
                                             newDeliverables[idx] = e.target.value;
                                             handleEdit("deliverables", newDeliverables);
                                         }}
-                                        className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                         placeholder="Enter deliverable"
                                     />
-                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                    <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
                                         ✓ Editable
                                     </span>
                                 </div>
@@ -349,16 +351,16 @@ export default function ReviewPage() {
                     </div>
 
                     {/* Timeline Section */}
-                    <div className="bg-gray-50 dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                             TIMELINE
                         </h2>
                         <div className="space-y-6">
                             {manifest.timeline.map((phase, phaseIdx) => (
-                                <div key={phaseIdx} className="border-2 border-gray-300 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-[#171717]">
+                                <div key={phaseIdx} className="border border-gray-300 dark:border-gray-700 rounded-2xl p-5 bg-white dark:bg-[#1A1A1A]">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="flex-1 relative">
-                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-xs font-light text-gray-500 dark:text-gray-400 mb-1">
                                                 Phase Name
                                             </label>
                                             <input
@@ -370,11 +372,11 @@ export default function ReviewPage() {
                                                     handleEdit("timeline", newTimeline);
                                                 }}
                                                 placeholder="Enter phase name"
-                                                className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                             />
                                         </div>
                                         <div className="w-24 relative">
-                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                            <label className="block text-xs font-light text-gray-500 dark:text-gray-400 mb-1">
                                                 Duration
                                             </label>
                                             <div className="relative">
@@ -388,16 +390,16 @@ export default function ReviewPage() {
                                                         handleEdit("timeline", newTimeline);
                                                     }}
                                                     placeholder="0"
-                                                    className="w-full px-4 py-2 pr-8 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                                    className="w-full px-4 py-2 pr-8 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400 font-light">
                                                     weeks
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="ml-2 border-l-2 border-gray-300 dark:border-gray-700 pl-4 space-y-2">
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                                    <div className="ml-2 border-l border-gray-300 dark:border-gray-700 pl-4 space-y-2">
+                                        <label className="block text-xs font-light text-gray-500 dark:text-gray-400 mb-2">
                                             Tasks:
                                         </label>
                                         {phase.tasks.map((task, taskIdx) => (
@@ -414,9 +416,9 @@ export default function ReviewPage() {
                                                         handleEdit("timeline", newTimeline);
                                                     }}
                                                     placeholder="Enter task"
-                                                    className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-500 dark:focus:border-gray-500"
+                                                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
                                                 />
-                                                <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                                <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
                                                     ✓ Editable
                                                 </span>
                                             </div>
@@ -428,7 +430,7 @@ export default function ReviewPage() {
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                         </div>
                     )}
@@ -436,14 +438,14 @@ export default function ReviewPage() {
                     <div className="flex gap-4">
                         <button
                             onClick={handleSave}
-                            className="cursor-pointer px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                            className="cursor-pointer px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-xl font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1E1E1E] active:bg-gray-100 dark:active:bg-[#242424] transition-all"
                         >
                             Save Changes
                         </button>
                         <button
                             onClick={handleCreateInDrive}
                             disabled={loading}
-                            className="cursor-pointer flex-1 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="cursor-pointer flex-1 px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
                             {loading ? "Creating..." : "Create in Drive"}
                         </button>

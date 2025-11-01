@@ -48,10 +48,10 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
         return (
             <div className="h-full min-h-[400px] flex items-center justify-center py-8 px-8">
                 <div className="text-center">
-                    <div className="text-gray-400 dark:text-gray-500 text-sm mb-2">
+                    <div className="text-gray-400 dark:text-gray-500 text-sm mb-2 font-light">
                         Message History
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm font-light">
                         Your conversation will appear here
                     </p>
                 </div>
@@ -72,18 +72,18 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
                         className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                         <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === "user"
-                                ? "bg-black dark:bg-white text-white dark:text-black"
-                                : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                            className={`max-w-[80%] rounded-3xl px-4 py-3 ${message.role === "user"
+                                ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
+                                : "bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
                                 }`}
                         >
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                         </div>
                     </div>
                 ))}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3">
+                        <div className="bg-gray-100 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-3xl px-4 py-3">
                             <div className="flex gap-1">
                                 <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
                                 <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>

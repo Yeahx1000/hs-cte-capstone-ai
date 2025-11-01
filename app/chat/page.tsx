@@ -93,25 +93,27 @@ export default function ChatPage() {
     const showOnboardingMessage = messages.length === 0;
 
     return (
-        <div className="flex flex-col h-screen bg-white dark:bg-[#171717] overflow-hidden">
-            <div className="w-full max-w-7xl mx-auto px-4 py-4 shrink-0">
-                <div className="flex justify-end mb-4">
+        <div className="flex flex-col h-screen bg-white dark:bg-[#1A1A1A] overflow-hidden">
+            {/* Header */}
+            <div className="w-full px-6 py-4 shrink-0">
+                <div className="flex justify-end max-w-7xl mx-auto">
                     <UserMenu user={session.user} />
                 </div>
             </div>
 
-            <div className="flex-1 flex items-start justify-center max-w-7xl mx-auto w-full px-4 pb-4 gap-8 overflow-hidden min-h-0">
+            {/* Main Content */}
+            <div className="flex-1 flex items-start justify-center max-w-7xl mx-auto w-full px-6 pb-8 gap-8 overflow-hidden min-h-0">
                 <div className="flex-1 max-w-2xl h-full flex flex-col min-h-0">
-                    <div className="mb-6 shrink-0">
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    <div className="mb-8 shrink-0">
+                        <h1 className="text-5xl font-light text-gray-900 dark:text-white mb-3">
                             Plan Your Capstone
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                        <p className="text-lg text-gray-600 dark:text-gray-400 font-light">
                             Chat with AI to plan your CTE Pathway capstone project
                         </p>
                     </div>
                     {showOnboardingMessage && (
-                        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-800 dark:text-gray-200 transition-opacity shrink-0">
+                        <div className="mb-6 p-4 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-800 dark:text-gray-200 transition-opacity shrink-0">
                             Tell Capris what you think could be a cool career or what you'd like to do for work if you could have any job.
                         </div>
                     )}
@@ -124,14 +126,14 @@ export default function ChatPage() {
                         />
                     </div>
                     {conversationState?.phase === "review" && !loading && (
-                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-800 rounded-lg shrink-0">
-                            <p className="text-sm text-gray-800 dark:text-gray-200 mb-3">
+                        <div className="mt-6 p-4 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-2xl shrink-0">
+                            <p className="text-sm text-gray-800 dark:text-gray-200 mb-3 font-light">
                                 Ready to review your capstone plan?
                             </p>
                             <button
                                 onClick={handleReviewClick}
                                 disabled={reviewLoading || manifestGenerating}
-                                className="w-full px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 {reviewLoading || manifestGenerating
                                     ? "Generating Plan..."
@@ -140,7 +142,7 @@ export default function ChatPage() {
                         </div>
                     )}
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg shrink-0">
+                        <div className="mt-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shrink-0">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                         </div>
                     )}
