@@ -75,18 +75,23 @@ export async function POST(request: Request) {
 
         // Insert text content using batchUpdate
         // Always generate full template from manifest data to ensure all user input is included
-        const docText = formatManifestAsText(typedManifest);
+        const { textContent, formattingRequests } = formatManifestAsStructuredContent(typedManifest);
+
+        // Combine insert text request with formatting requests
+        const requests: any[] = [
+            {
+                insertText: {
+                    location: { index: 1 },
+                    text: textContent,
+                },
+            },
+            ...formattingRequests
+        ];
+
         await docs.documents.batchUpdate({
             documentId: docId,
             requestBody: {
-                requests: [
-                    {
-                        insertText: {
-                            location: { index: 1 },
-                            text: docText,
-                        },
-                    },
-                ],
+                requests,
             },
         });
 
@@ -114,54 +119,111 @@ export async function POST(request: Request) {
     }
 }
 
-// Helper functions to format manifest as content
-function formatManifestAsText(manifest: CapstoneManifest): string {
+// Helper function to format manifest with structured content for Google Docs API
+function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
+    textContent: string;
+    formattingRequests: any[]
+} {
     const sections: string[] = [];
+    const formattingRequests: any[] = [];
+    let currentIndex = 1; // Start index for document (1-based)
 
-    // Title
-    sections.push(`${manifest.title}`);
-    sections.push(""); // Empty line
+    // Helper to add text and track index
+    const addText = (text: string) => {
+        sections.push(text);
+        const startIndex = currentIndex;
+        currentIndex += text.length;
+        return { startIndex, endIndex: currentIndex };
+    };
 
-    // CTE Pathway Alignment (non-negotiable)
-    sections.push("PATHWAY ALIGNMENT");
-    sections.push(`CTE Pathway: ${manifest.ctePathway || "Not specified"}`);
-    sections.push("Note: This capstone is the final course in a 2-3 course CTE sequence. A grade of C- or better marks a CTE Pathway Completer.");
-    sections.push(""); // Empty line
+    const addLine = (text: string) => {
+        const range = addText(text + "\n");
+        return range;
+    };
+
+    // Title - will be formatted as large, bold heading
+    const titleRange = addLine(manifest.title);
+    formattingRequests.push({
+        updateTextStyle: {
+            range: {
+                startIndex: titleRange.startIndex,
+                endIndex: titleRange.endIndex - 1, // Exclude newline
+            },
+            textStyle: {
+                bold: true,
+                fontSize: {
+                    magnitude: 18,
+                    unit: "PT",
+                },
+            },
+            fields: "bold,fontSize",
+        },
+    });
+    addLine(""); // Empty line
+
+    // Helper function for section headers
+    const addSectionHeader = (header: string) => {
+        const range = addLine(header);
+        formattingRequests.push({
+            updateTextStyle: {
+                range: {
+                    startIndex: range.startIndex,
+                    endIndex: range.endIndex - 1,
+                },
+                textStyle: {
+                    bold: true,
+                    fontSize: {
+                        magnitude: 14,
+                        unit: "PT",
+                    },
+                },
+                fields: "bold,fontSize",
+            },
+        });
+        // Add spacing after header
+        addLine("");
+    };
+
+    // CTE Pathway Alignment
+    addSectionHeader("PATHWAY ALIGNMENT");
+    addLine(`CTE Pathway: ${manifest.ctePathway || "Not specified"}`);
+    addLine("Note: This capstone is the final course in a 2-3 course CTE sequence. A grade of C- or better marks a CTE Pathway Completer.");
+    addLine("");
 
     // Project Proposal
-    sections.push("PROJECT PROPOSAL (Teacher-Approved)");
+    addSectionHeader("PROJECT PROPOSAL (Teacher-Approved)");
     if (manifest.projectProposal) {
         if (manifest.projectProposal.problemOpportunity) {
-            sections.push(`Problem/Opportunity: ${manifest.projectProposal.problemOpportunity}`);
+            addLine(`Problem/Opportunity: ${manifest.projectProposal.problemOpportunity}`);
         }
         if (manifest.projectProposal.industryContext) {
-            sections.push(`Industry Context: ${manifest.projectProposal.industryContext}`);
+            addLine(`Industry Context: ${manifest.projectProposal.industryContext}`);
         }
         if (manifest.projectProposal.endUser) {
-            sections.push(`End User: ${manifest.projectProposal.endUser}`);
+            addLine(`End User: ${manifest.projectProposal.endUser}`);
         }
         if (manifest.projectProposal.successCriteria && manifest.projectProposal.successCriteria.length > 0) {
-            sections.push("Success Criteria:");
+            addLine("Success Criteria:");
             manifest.projectProposal.successCriteria.forEach((criteria) => {
-                sections.push(`• ${criteria}`);
+                addLine(`• ${criteria}`);
             });
         }
         if (manifest.projectProposal.mentor) {
-            sections.push(`Mentor: ${manifest.projectProposal.mentor}`);
+            addLine(`Mentor: ${manifest.projectProposal.mentor}`);
         }
-        sections.push("Must map to CTE Model Curriculum Standards for the pathway + Career Ready Practices (communication, teamwork, problem solving).");
+        addLine("Must map to CTE Model Curriculum Standards for the pathway + Career Ready Practices (communication, teamwork, problem solving).");
     } else {
-        sections.push("Problem/Opportunity: [To be completed]");
-        sections.push("Industry Context: [To be completed]");
-        sections.push("End User: [To be completed]");
-        sections.push("Success Criteria: [To be completed]");
-        sections.push("Timeline: [See Timeline section below]");
-        sections.push("Mentor: [If applicable]");
+        addLine("Problem/Opportunity: [To be completed]");
+        addLine("Industry Context: [To be completed]");
+        addLine("End User: [To be completed]");
+        addLine("Success Criteria: [To be completed]");
+        addLine("Timeline: [See Timeline section below]");
+        addLine("Mentor: [If applicable]");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Work-Based Learning Component
-    sections.push("WORK-BASED LEARNING COMPONENT");
+    addSectionHeader("WORK-BASED LEARNING COMPONENT");
     if (manifest.workBasedLearning) {
         if (manifest.workBasedLearning.activityType) {
             const activityLabels: Record<string, string> = {
@@ -172,216 +234,233 @@ function formatManifestAsText(manifest: CapstoneManifest): string {
                 "on-the-job-training": "On-the-Job Training",
                 "other": "Other"
             };
-            sections.push(`Activity Type: ${activityLabels[manifest.workBasedLearning.activityType] || manifest.workBasedLearning.activityType}`);
+            addLine(`Activity Type: ${activityLabels[manifest.workBasedLearning.activityType] || manifest.workBasedLearning.activityType}`);
         }
         if (manifest.workBasedLearning.hours) {
-            sections.push(`Hours: ${manifest.workBasedLearning.hours}`);
+            addLine(`Hours: ${manifest.workBasedLearning.hours}`);
         }
         if (manifest.workBasedLearning.description) {
-            sections.push(`Description: ${manifest.workBasedLearning.description}`);
+            addLine(`Description: ${manifest.workBasedLearning.description}`);
         }
         if (manifest.workBasedLearning.artifacts && manifest.workBasedLearning.artifacts.length > 0) {
-            sections.push("Artifacts:");
+            addLine("Artifacts:");
             manifest.workBasedLearning.artifacts.forEach((artifact) => {
-                sections.push(`• ${artifact}`);
+                addLine(`• ${artifact}`);
             });
         }
     } else {
-        sections.push("At least one capstone-level WBL activity required (e.g., professional interview, job-shadow, internship, youth apprenticeship, or on-the-job training).");
-        sections.push("Activity Type: [To be completed]");
-        sections.push("Hours: [To be documented]");
-        sections.push("Artifacts: [To be collected]");
+        addLine("At least one capstone-level WBL activity required (e.g., professional interview, job-shadow, internship, youth apprenticeship, or on-the-job training).");
+        addLine("Activity Type: [To be completed]");
+        addLine("Hours: [To be documented]");
+        addLine("Artifacts: [To be collected]");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Objectives
-    sections.push("OBJECTIVES");
+    addSectionHeader("OBJECTIVES");
     if (manifest.objectives && manifest.objectives.length > 0) {
         manifest.objectives.forEach((obj) => {
-            sections.push(`• ${obj}`);
+            addLine(`• ${obj}`);
         });
     } else {
-        sections.push("No objectives specified");
+        addLine("No objectives specified");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
-    // Deliverables (Enhanced)
-    sections.push("DELIVERABLES (Product + Process Bundle)");
+    // Deliverables
+    addSectionHeader("DELIVERABLES (Product + Process Bundle)");
     if (manifest.deliverablesDetail) {
         if (manifest.deliverablesDetail.technicalProduct) {
-            sections.push(`Technical Product: ${manifest.deliverablesDetail.technicalProduct}`);
+            addLine(`Technical Product: ${manifest.deliverablesDetail.technicalProduct}`);
         }
         if (manifest.deliverablesDetail.processEvidence && manifest.deliverablesDetail.processEvidence.length > 0) {
-            sections.push("Process Evidence:");
+            addLine("Process Evidence:");
             manifest.deliverablesDetail.processEvidence.forEach((evidence) => {
-                sections.push(`• ${evidence}`);
+                addLine(`• ${evidence}`);
             });
         }
         if (manifest.deliverablesDetail.industryFeedback) {
-            sections.push(`Industry Feedback: ${manifest.deliverablesDetail.industryFeedback}`);
+            addLine(`Industry Feedback: ${manifest.deliverablesDetail.industryFeedback}`);
         }
         if (manifest.deliverablesDetail.standardsMap && manifest.deliverablesDetail.standardsMap.length > 0) {
-            sections.push("Standards Map:");
+            addLine("Standards Map:");
             manifest.deliverablesDetail.standardsMap.forEach((standard) => {
-                sections.push(`• ${standard}`);
+                addLine(`• ${standard}`);
             });
         }
     }
     if (manifest.deliverables && manifest.deliverables.length > 0) {
-        sections.push("Additional Deliverables:");
+        addLine("Additional Deliverables:");
         manifest.deliverables.forEach((del) => {
-            sections.push(`• ${del}`);
+            addLine(`• ${del}`);
         });
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Timeline
-    sections.push("TIMELINE");
+    addSectionHeader("TIMELINE");
     if (manifest.timeline && manifest.timeline.length > 0) {
         manifest.timeline.forEach((phase) => {
-            sections.push(`${phase.phase} (${phase.weeks} weeks)`);
+            // Phase name with weeks - make it bold
+            const phaseText = `${phase.phase} (${phase.weeks} weeks)`;
+            const phaseRange = addLine(phaseText);
+            formattingRequests.push({
+                updateTextStyle: {
+                    range: {
+                        startIndex: phaseRange.startIndex,
+                        endIndex: phaseRange.endIndex - 1,
+                    },
+                    textStyle: {
+                        bold: true,
+                    },
+                    fields: "bold",
+                },
+            });
             if (phase.tasks && phase.tasks.length > 0) {
                 phase.tasks.forEach((task) => {
-                    sections.push(`  • ${task}`);
+                    addLine(`  • ${task}`);
                 });
             }
-            sections.push(""); // Empty line between phases
+            addLine(""); // Empty line between phases
         });
     } else {
-        sections.push("No timeline specified");
-        sections.push(""); // Empty line
+        addLine("No timeline specified");
     }
+    addLine("");
 
     // Public Presentation
-    sections.push("PUBLIC PRESENTATION");
+    addSectionHeader("PUBLIC PRESENTATION");
     if (manifest.publicPresentation) {
-        sections.push(`Duration: ${manifest.publicPresentation.duration || "8-10 minutes"}`);
-        sections.push("Defense to a panel (teacher + industry/college rep) with Q&A and rubric.");
+        addLine(`Duration: ${manifest.publicPresentation.duration || "8-10 minutes"}`);
+        addLine("Defense to a panel (teacher + industry/college rep) with Q&A and rubric.");
         if (manifest.publicPresentation.panelMembers && manifest.publicPresentation.panelMembers.length > 0) {
-            sections.push("Panel Members:");
+            addLine("Panel Members:");
             manifest.publicPresentation.panelMembers.forEach((member) => {
-                sections.push(`• ${member}`);
+                addLine(`• ${member}`);
             });
         }
         if (manifest.publicPresentation.rubricCriteria && manifest.publicPresentation.rubricCriteria.length > 0) {
-            sections.push("Panel Rubric Criteria:");
+            addLine("Panel Rubric Criteria:");
             manifest.publicPresentation.rubricCriteria.forEach((criteria) => {
-                sections.push(`• ${criteria}`);
+                addLine(`• ${criteria}`);
             });
         }
     } else {
-        sections.push("8-10 minute defense to a panel (teacher + industry/college rep) with Q&A and rubric.");
-        sections.push("Panel rubric should rate: problem definition, technical accuracy, industry relevance, communication, professionalism.");
+        addLine("8-10 minute defense to a panel (teacher + industry/college rep) with Q&A and rubric.");
+        addLine("Panel rubric should rate: problem definition, technical accuracy, industry relevance, communication, professionalism.");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Reflection & Postsecondary Plan
-    sections.push("REFLECTION & POSTSECONDARY PLAN");
+    addSectionHeader("REFLECTION & POSTSECONDARY PLAN");
     if (manifest.reflectionPostsecondary) {
         if (manifest.reflectionPostsecondary.reflection) {
-            sections.push(`Reflection: ${manifest.reflectionPostsecondary.reflection}`);
+            addLine(`Reflection: ${manifest.reflectionPostsecondary.reflection}`);
         }
-        sections.push("Updated Postsecondary Plan:");
+        addLine("Updated Postsecondary Plan:");
         if (manifest.reflectionPostsecondary.coursework && manifest.reflectionPostsecondary.coursework.length > 0) {
-            sections.push("Coursework:");
+            addLine("Coursework:");
             manifest.reflectionPostsecondary.coursework.forEach((course) => {
-                sections.push(`• ${course}`);
+                addLine(`• ${course}`);
             });
         }
         if (manifest.reflectionPostsecondary.training && manifest.reflectionPostsecondary.training.length > 0) {
-            sections.push("Training:");
+            addLine("Training:");
             manifest.reflectionPostsecondary.training.forEach((training) => {
-                sections.push(`• ${training}`);
+                addLine(`• ${training}`);
             });
         }
         if (manifest.reflectionPostsecondary.credentials && manifest.reflectionPostsecondary.credentials.length > 0) {
-            sections.push("Credentials:");
+            addLine("Credentials:");
             manifest.reflectionPostsecondary.credentials.forEach((cred) => {
-                sections.push(`• ${cred}`);
+                addLine(`• ${cred}`);
             });
         }
         if (manifest.reflectionPostsecondary.apprenticeship && manifest.reflectionPostsecondary.apprenticeship.length > 0) {
-            sections.push("Apprenticeship:");
+            addLine("Apprenticeship:");
             manifest.reflectionPostsecondary.apprenticeship.forEach((app) => {
-                sections.push(`• ${app}`);
+                addLine(`• ${app}`);
             });
         }
         if (manifest.reflectionPostsecondary.collegeMajor && manifest.reflectionPostsecondary.collegeMajor.length > 0) {
-            sections.push("College Major:");
+            addLine("College Major:");
             manifest.reflectionPostsecondary.collegeMajor.forEach((major) => {
-                sections.push(`• ${major}`);
+                addLine(`• ${major}`);
             });
         }
     } else {
-        sections.push("1-2 page reflection + updated plan (coursework, training, credential, apprenticeship, college major).");
-        sections.push("This helps demonstrate pathway completion and ties to counseling artifacts.");
+        addLine("1-2 page reflection + updated plan (coursework, training, credential, apprenticeship, college major).");
+        addLine("This helps demonstrate pathway completion and ties to counseling artifacts.");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Rubric
-    sections.push("RUBRIC (4 Domains × 4 Levels)");
+    addSectionHeader("RUBRIC (4 Domains × 4 Levels)");
     if (manifest.rubric) {
         if (manifest.rubric.technicalQuality && manifest.rubric.technicalQuality.length > 0) {
-            sections.push("Technical Quality (meets pathway standards):");
+            addLine("Technical Quality (meets pathway standards):");
             manifest.rubric.technicalQuality.forEach((item) => {
-                sections.push(`• ${item}`);
+                addLine(`• ${item}`);
             });
         }
         if (manifest.rubric.workBasedIntegration && manifest.rubric.workBasedIntegration.length > 0) {
-            sections.push("Work-Based Integration (uses real feedback/data):");
+            addLine("Work-Based Integration (uses real feedback/data):");
             manifest.rubric.workBasedIntegration.forEach((item) => {
-                sections.push(`• ${item}`);
+                addLine(`• ${item}`);
             });
         }
         if (manifest.rubric.communicationProfessionalism && manifest.rubric.communicationProfessionalism.length > 0) {
-            sections.push("Communication/Professionalism (panel, docs):");
+            addLine("Communication/Professionalism (panel, docs):");
             manifest.rubric.communicationProfessionalism.forEach((item) => {
-                sections.push(`• ${item}`);
+                addLine(`• ${item}`);
             });
         }
         if (manifest.rubric.reflectionNextSteps && manifest.rubric.reflectionNextSteps.length > 0) {
-            sections.push("Reflection/Next Steps (concrete postsecondary plan):");
+            addLine("Reflection/Next Steps (concrete postsecondary plan):");
             manifest.rubric.reflectionNextSteps.forEach((item) => {
-                sections.push(`• ${item}`);
+                addLine(`• ${item}`);
             });
         }
     } else {
-        sections.push("Technical Quality (meets pathway standards)");
-        sections.push("Work-Based Integration (uses real feedback/data)");
-        sections.push("Communication/Professionalism (panel, docs)");
-        sections.push("Reflection/Next Steps (concrete postsecondary plan)");
-        sections.push("Align descriptors to your specific pathway's standards so scoring doubles as standards evidence.");
+        addLine("Technical Quality (meets pathway standards)");
+        addLine("Work-Based Integration (uses real feedback/data)");
+        addLine("Communication/Professionalism (panel, docs)");
+        addLine("Reflection/Next Steps (concrete postsecondary plan)");
+        addLine("Align descriptors to your specific pathway's standards so scoring doubles as standards evidence.");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Assessment
-    sections.push("ASSESSMENT CRITERIA");
+    addSectionHeader("ASSESSMENT CRITERIA");
     if (manifest.assessment && manifest.assessment.length > 0) {
         manifest.assessment.forEach((ass) => {
-            sections.push(`• ${ass}`);
+            addLine(`• ${ass}`);
         });
     } else {
-        sections.push("No assessment criteria specified");
+        addLine("No assessment criteria specified");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Resources
-    sections.push("RESOURCES");
+    addSectionHeader("RESOURCES");
     if (manifest.resources && manifest.resources.length > 0) {
         manifest.resources.forEach((res) => {
-            sections.push(`• ${res}`);
+            addLine(`• ${res}`);
         });
     } else {
-        sections.push("No resources specified");
+        addLine("No resources specified");
     }
-    sections.push(""); // Empty line
+    addLine("");
 
     // Documentation Checklist
-    sections.push("DOCUMENTATION CHECKLIST (For School Records)");
-    sections.push("□ Roster of capstone students with final grades (C- or better = completer)");
-    sections.push("□ Artifacts list (proposal, WBL evidence, product, reflection)");
-    sections.push("□ Panel rubrics + industry participation log");
-    sections.push("□ SIS coding that flags the capstone course correctly for pathway completion reporting");
+    addSectionHeader("DOCUMENTATION CHECKLIST (For School Records)");
+    addLine("□ Roster of capstone students with final grades (C- or better = completer)");
+    addLine("□ Artifacts list (proposal, WBL evidence, product, reflection)");
+    addLine("□ Panel rubrics + industry participation log");
+    addLine("□ SIS coding that flags the capstone course correctly for pathway completion reporting");
 
-    return sections.join("\n");
+    return {
+        textContent: sections.join(""),
+        formattingRequests: formattingRequests,
+    };
 }
