@@ -87,12 +87,12 @@ export default function ReviewPage() {
 
                         if (response.ok) {
                             const data = await response.json();
-                            
+
                             // Ensure CTE pathway from onboarding is included if not in generated manifest
                             if (onboardingData?.ctePathway && (!data.ctePathway || data.ctePathway !== onboardingData.ctePathway)) {
                                 data.ctePathway = onboardingData.ctePathway;
                             }
-                            
+
                             if (data && data.title && data.ctePathway) {
                                 setManifest(data);
                                 sessionStorage.setItem("manifest", JSON.stringify(data));
@@ -123,7 +123,7 @@ export default function ReviewPage() {
             if (!cancelled) {
                 redirectTimeout = setTimeout(() => {
                     if (!cancelled) {
-                        router.push("/chat");
+                        router.push("/");
                     }
                 }, 2000);
             }
@@ -190,7 +190,7 @@ export default function ReviewPage() {
                 .join("\n");
 
             alert(`Successfully created capstone files in Google Drive!\n\n${fileLinks}`);
-            router.push("/chat");
+            router.push("/");
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
         } finally {
@@ -215,7 +215,7 @@ export default function ReviewPage() {
                     {error && (
                         <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                            <p className="text-xs text-red-500 dark:text-red-400 mt-2">Redirecting to chat...</p>
+                            <p className="text-xs text-red-500 dark:text-red-400 mt-2">Redirecting to homepage...</p>
                         </div>
                     )}
                 </div>
