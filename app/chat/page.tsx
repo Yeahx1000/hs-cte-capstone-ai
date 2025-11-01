@@ -53,8 +53,6 @@ export default function ChatPage() {
         }
     }, [conversationState?.phase, router]);
 
-    // Display a helpful first message in the UI until user sends a message. Working on this for now, something that can guide the students first prompt.
-
     const handleSendMessage = (content: string) => {
         sendMessage(content, onboardingData);
     };
@@ -89,9 +87,6 @@ export default function ChatPage() {
         return null; // Will redirect via middleware
     }
 
-    // Show the onboarding tip UI message until a message is sent
-    const showOnboardingMessage = messages.length === 0;
-
     return (
         <div className="flex flex-col h-screen bg-white dark:bg-[#1A1A1A] overflow-hidden">
             {/* Header */}
@@ -104,19 +99,6 @@ export default function ChatPage() {
             {/* Main Content */}
             <div className="flex-1 flex items-start justify-center max-w-7xl mx-auto w-full px-6 pb-8 gap-8 overflow-hidden min-h-0">
                 <div className="flex-1 max-w-2xl h-full flex flex-col min-h-0">
-                    <div className="mb-8 shrink-0">
-                        <h1 className="text-5xl font-light text-gray-900 dark:text-white mb-3">
-                            Plan Your Capstone
-                        </h1>
-                        <p className="text-lg text-gray-600 dark:text-gray-400 font-light">
-                            Chat with AI to plan your CTE Pathway capstone project
-                        </p>
-                    </div>
-                    {showOnboardingMessage && (
-                        <div className="mb-6 p-4 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-800 dark:text-gray-200 transition-opacity shrink-0">
-                            Tell Capris what you think could be a cool career or what you'd like to do for work if you could have any job.
-                        </div>
-                    )}
                     <div className="flex-1 min-h-0 flex flex-col">
                         <Chat
                             messages={messages}

@@ -1,44 +1,25 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { OnboardingProps } from "@/types";
 import { cteCareers } from "@/lib/data/cte-careers";
+import { useTypingAnimation } from "@/lib/hooks/useTypingAnimation";
 
 export default function Onboarding({ user }: OnboardingProps) {
   const router = useRouter();
   const [name, setName] = useState<string>("");
   const [ctePathway, setCtePathway] = useState<string>("");
-  const [namePlaceholder, setNamePlaceholder] = useState<string>("");
-  const [ctePlaceholder, setCtePlaceholder] = useState<string>("");
   const [showCteField, setShowCteField] = useState<boolean>(false);
 
-  // Track if CTE placeholder has been animated
-  const hasAnimatedCtePlaceholder = useRef<boolean>(false);
+  // Typing animations
   const namePlaceholderText = "Hello, may I ask your name?";
+  const namePlaceholder = useTypingAnimation(namePlaceholderText, 20, true);
 
-  // Initial typing animation effect
-  useEffect(() => {
-    let nameIndex = 0;
-    let nameInterval: NodeJS.Timeout | null = null;
-
-    // Typing out name placeholder animation
-    nameInterval = setInterval(() => {
-      if (nameIndex <= namePlaceholderText.length) {
-        setNamePlaceholder(nameIndex < namePlaceholderText.length
-          ? namePlaceholderText.slice(0, nameIndex) + '▋'
-          : namePlaceholderText);
-        nameIndex++;
-      } else {
-        clearInterval(nameInterval!);
-      }
-    }, 20);
-
-    return () => {
-      // Cleanup intervals if component unmounts
-      if (nameInterval) clearInterval(nameInterval);
-    };
-  }, []);
+  // CTE placeholder: animate whenever showCteField changes
+  const userName = name.trim() || '👋';
+  const ctePlaceholderText = `Nice to meet you ${userName}, what's your CTE pathway?`;
+  const ctePlaceholder = useTypingAnimation(ctePlaceholderText, 20, showCteField);
 
   // Debounce effect to allow user to type their name before showing CTE field, half second delay
   useEffect(() => {
@@ -50,35 +31,6 @@ export default function Onboarding({ user }: OnboardingProps) {
       return () => clearTimeout(timer);
     }
   }, [name]);
-
-  // Typing out CTE placeholder animation
-  useEffect(() => {
-    if (showCteField) {
-      const userName = name.trim() || '👋';
-      const fullText = `Nice to meet you ${userName}, what's your CTE pathway?`;
-
-      // If this is the first time showing, animate it
-      if (!hasAnimatedCtePlaceholder.current) {
-        let cteIndex = 0;
-        const cteInterval = setInterval(() => {
-          if (cteIndex <= fullText.length) {
-            setCtePlaceholder(cteIndex < fullText.length
-              ? fullText.slice(0, cteIndex) + '▋'
-              : fullText);
-            cteIndex++;
-          } else {
-            hasAnimatedCtePlaceholder.current = true;
-            clearInterval(cteInterval);
-          }
-        }, 20);
-
-        return () => clearInterval(cteInterval);
-      } else {
-        // If placeholder already exists, just update it without animation
-        setCtePlaceholder(fullText);
-      }
-    }
-  }, [showCteField, name]);
 
   const handleContinue = () => {
     if (!name.trim() || !ctePathway) {

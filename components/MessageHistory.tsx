@@ -1,11 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { MessageHistoryProps } from "@/types";
+import { useTypingAnimation } from "@/lib/hooks/useTypingAnimation";
 
 function MessageHistory({ messages, loading }: MessageHistoryProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const messagesLengthRef = useRef(messages.length);
+
+    // Typing animation for the initial message
+    const initialMessage = "Share your dream career or passion, and I'll help you build a capstone project around it!";
+    const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0, true);
 
     // logic to auto-scroll to bottom on new responses, QOL feature.
     const isNearBottom = () => {
@@ -47,12 +52,12 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
     if (messages.length === 0) {
         return (
             <div className="h-full min-h-[400px] flex items-center justify-center py-8 px-8">
-                <div className="text-center">
-                    <div className="text-gray-400 dark:text-gray-500 text-sm mb-2 font-light">
-                        Message History
+                <div className="text-center max-w-md">
+                    <div className="text-gray-400 dark:text-gray-500 text-sm mb-4 font-light">
+                        Message History will appear here
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm font-light">
-                        Your conversation will appear here
+                    <p className="text-gray-600 dark:text-gray-300 text-xl font-light leading-relaxed">
+                        {animatedInitialMessage}
                     </p>
                 </div>
             </div>
