@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 
 // deleted commented out providers, can always just add them in a production environment.
 export const authConfig = {
+    trustHost: true,
     providers: [
         Google({
             clientId: process.env.GOOGLE_CLIENT_ID!,
