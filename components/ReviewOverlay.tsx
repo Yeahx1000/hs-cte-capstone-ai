@@ -11,6 +11,11 @@ interface ReviewOverlayProps {
     onManifestUpdate?: (manifest: Manifest) => void;
 }
 
+interface SuccessModalData {
+    folderLink: string;
+    docLink: string;
+}
+
 export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClose, onManifestUpdate }: ReviewOverlayProps) {
     const router = useRouter();
     const { data: session } = useSession();
@@ -18,6 +23,8 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [studentName, setStudentName] = useState<string>("Student");
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successData, setSuccessData] = useState<SuccessModalData | null>(null);
 
     // Update manifest when initialManifest changes
     useEffect(() => {
@@ -95,16 +102,12 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
 
             const data = await response.json();
 
-            // Show success with links to all created files
-            const fileLinks = [
-                `Folder: ${data.folderLink}`,
-                data.files.doc ? `Document: ${data.files.doc.link}` : "",
-            ]
-                .filter(Boolean)
-                .join("\n");
-
-            alert(`Successfully created capstone files in Google Drive!\n\n${fileLinks}`);
-            router.push("/");
+            // Show success modal with links to all created files
+            setSuccessData({
+                folderLink: data.folderLink,
+                docLink: data.files.doc?.link || "",
+            });
+            setShowSuccessModal(true);
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
         } finally {
@@ -125,11 +128,11 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
             {/* Overlay Content */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
                 <div
-                    className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-200 dark:border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl"
+                    className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                    <div className="flex items-center justify-between px-6 py-4 border-b border-[#E8F0EB] dark:border-[#2F3A30] shrink-0">
                         <div>
                             <h1 className="text-3xl font-light text-gray-900 dark:text-white">
                                 Review Your Capstone Project
@@ -140,7 +143,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-lg transition-colors"
+                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-[#FAFCFB] dark:hover:bg-[#2A2A2A] rounded-lg transition-colors"
                             aria-label="Close"
                         >
                             <svg
@@ -163,7 +166,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                     <div className="flex-1 overflow-y-auto px-6 py-6">
                         <div className="space-y-6">
                             {/* Project Title Section */}
-                            <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-[#FAFCFB] dark:bg-[#2A2A2A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] p-6">
                                 <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                                     PROJECT TITLE
                                 </h2>
@@ -172,7 +175,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                         type="text"
                                         value={manifest.title}
                                         onChange={(e) => handleEdit("title", e.target.value)}
-                                        className="w-full px-4 py-3 pr-20 text-lg font-light border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                        className="w-full px-4 py-3 pr-20 text-lg font-light border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                         placeholder="Enter project title"
                                     />
                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -182,7 +185,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                             </div>
 
                             {/* CTE Pathway Section */}
-                            <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-[#FAFCFB] dark:bg-[#2A2A2A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] p-6">
                                 <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                                     PATHWAY ALIGNMENT
                                 </h2>
@@ -195,7 +198,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                             type="text"
                                             value={manifest.ctePathway}
                                             onChange={(e) => handleEdit("ctePathway", e.target.value)}
-                                            className="w-full px-4 py-3 pr-20 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                            className="w-full px-4 py-3 pr-20 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                             placeholder="Enter CTE pathway"
                                         />
                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -209,7 +212,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                             </div>
 
                             {/* Objectives Section */}
-                            <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-[#FAFCFB] dark:bg-[#2A2A2A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] p-6">
                                 <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                                     OBJECTIVES
                                 </h2>
@@ -225,7 +228,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                     newObjectives[idx] = e.target.value;
                                                     handleEdit("objectives", newObjectives);
                                                 }}
-                                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                                 placeholder="Enter objective"
                                             />
                                             <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
@@ -237,7 +240,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                             </div>
 
                             {/* Deliverables Section */}
-                            <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-[#FAFCFB] dark:bg-[#2A2A2A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] p-6">
                                 <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                                     DELIVERABLES (Product + Process Bundle)
                                 </h2>
@@ -253,7 +256,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                     newDeliverables[idx] = e.target.value;
                                                     handleEdit("deliverables", newDeliverables);
                                                 }}
-                                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                                 placeholder="Enter deliverable"
                                             />
                                             <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
@@ -265,13 +268,13 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                             </div>
 
                             {/* Timeline Section */}
-                            <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                            <div className="bg-[#FAFCFB] dark:bg-[#2A2A2A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] p-6">
                                 <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-4">
                                     TIMELINE
                                 </h2>
                                 <div className="space-y-6">
                                     {manifest.timeline.map((phase, phaseIdx) => (
-                                        <div key={phaseIdx} className="border border-gray-300 dark:border-gray-700 rounded-2xl p-5 bg-white dark:bg-[#1A1A1A]">
+                                        <div key={phaseIdx} className="border border-[#E0E8E3] dark:border-[#2F3A30] rounded-2xl p-5 bg-white dark:bg-[#1A1A1A]">
                                             <div className="flex items-center gap-4 mb-4">
                                                 <div className="flex-1 relative">
                                                     <label className="block text-xs font-light text-gray-500 dark:text-gray-400 mb-1">
@@ -286,7 +289,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                             handleEdit("timeline", newTimeline);
                                                         }}
                                                         placeholder="Enter phase name"
-                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                                     />
                                                 </div>
                                                 <div className="w-24 relative">
@@ -304,7 +307,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                                 handleEdit("timeline", newTimeline);
                                                             }}
                                                             placeholder="0"
-                                                            className="w-full px-4 py-2 pr-8 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                                            className="w-full px-4 py-2 pr-8 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                                         />
                                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 dark:text-gray-400 font-light">
                                                             weeks
@@ -312,7 +315,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="ml-2 border-l border-gray-300 dark:border-gray-700 pl-4 space-y-2">
+                                            <div className="ml-2 border-l border-[#E0E8E3] dark:border-[#2F3A30] pl-4 space-y-2">
                                                 <label className="block text-xs font-light text-gray-500 dark:text-gray-400 mb-2">
                                                     Tasks:
                                                 </label>
@@ -330,7 +333,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                                 handleEdit("timeline", newTimeline);
                                                             }}
                                                             placeholder="Enter task"
-                                                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-gray-400 dark:focus:border-gray-600 focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-600 transition-all"
+                                                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                                         />
                                                         <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap font-light">
                                                             ✓ Editable
@@ -352,10 +355,10 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 shrink-0 flex gap-4">
+                    <div className="px-6 py-4 border-t border-[#E8F0EB] dark:border-[#2F3A30] shrink-0 flex gap-4">
                         <button
                             onClick={handleSave}
-                            className="cursor-pointer px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-xl font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1E1E1E] active:bg-gray-100 dark:active:bg-[#242424] transition-all"
+                            className="cursor-pointer px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-xl font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-[#FAFCFB] dark:hover:bg-[#1E1E1E] active:bg-[#F5F7F6] dark:active:bg-[#242424] transition-all"
                         >
                             Save Changes
                         </button>
@@ -369,6 +372,82 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                     </div>
                 </div>
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && successData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setShowSuccessModal(false)}
+                    />
+
+                    {/* Modal */}
+                    <div className="relative bg-white dark:bg-[#1A1A1A] rounded-2xl border border-[#E8F0EB] dark:border-[#2F3A30] w-full max-w-md shadow-2xl">
+                        {/* Icon */}
+                        <div className="flex justify-center pt-8 pb-4">
+                            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="px-6 pb-6 text-center">
+                            <h2 className="text-2xl font-light text-gray-900 dark:text-white mb-2">
+                                Success!
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 font-light">
+                                Successfully created capstone files in Google Drive
+                            </p>
+
+                            {/* Links */}
+                            <div className="space-y-3 mb-6">
+                                <a
+                                    href={successData.folderLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block px-4 py-3 bg-[#FAFCFB] dark:bg-[#2A2A2A] border border-[#E8F0EB] dark:border-[#2F3A30] rounded-xl hover:bg-[#F0F4F2] dark:hover:bg-[#343434] transition-colors text-left"
+                                >
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <svg className="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium">Folder</span>
+                                    </div>
+                                </a>
+                                {successData.docLink && (
+                                    <a
+                                        href={successData.docLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block px-4 py-3 bg-[#FAFCFB] dark:bg-[#2A2A2A] border border-[#E8F0EB] dark:border-[#2F3A30] rounded-xl hover:bg-[#F0F4F2] dark:hover:bg-[#343434] transition-colors text-left"
+                                    >
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <svg className="w-4 h-4 text-gray-600 dark:text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">Document</span>
+                                        </div>
+                                    </a>
+                                )}
+                            </div>
+
+                            {/* Button */}
+                            <button
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    router.push("/");
+                                }}
+                                className="w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all"
+                            >
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
