@@ -5,6 +5,7 @@ import UserMenu from "./UserMenu";
 import { OnboardingProps } from "@/types";
 import { cteCareers } from "@/lib/data/cte-careers";
 import { useTypingAnimation } from "@/lib/hooks/useTypingAnimation";
+import BlackHoleBackground from "./BlackHoleBackground";
 
 export default function Onboarding({ user }: OnboardingProps) {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function Onboarding({ user }: OnboardingProps) {
   const [showCteField, setShowCteField] = useState<boolean>(false);
 
   // Typing animations
-  const namePlaceholderText = "May I ask your name?";
+  const namePlaceholderText = "What's your name?";
   const namePlaceholder = useTypingAnimation(namePlaceholderText, 20, true);
 
   // CTE placeholder: animate whenever showCteField changes
@@ -48,16 +49,17 @@ export default function Onboarding({ user }: OnboardingProps) {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-[#1A1A1A]">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-[#191919] relative overflow-hidden">
+      <BlackHoleBackground />
       {/* Header */}
-      <div className="w-full px-6 py-4">
+      <div className="w-full px-6 py-4 relative z-10">
         <div className="flex justify-end max-w-7xl mx-auto">
           <UserMenu user={user} />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 relative z-10">
         <div className="w-full max-w-2xl flex flex-col items-center">
           <h1 className="text-6xl font-light text-gray-900 dark:text-white mb-4 text-center tracking-tight">
             Capris ✌️
@@ -107,7 +109,12 @@ export default function Onboarding({ user }: OnboardingProps) {
                   }}
                 >
                   <option value="">{ctePlaceholder || "What's your CTE pathway?"}</option>
-                  {cteCareers.map((career) => (
+                  {cteCareers.map((
+                    career: {
+                      id: string,
+                      value: string,
+                      label: string
+                    }) => (
                     <option key={career.id} value={career.value}>
                       {career.label}
                     </option>
