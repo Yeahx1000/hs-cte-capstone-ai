@@ -9,7 +9,7 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
     const messagesLengthRef = useRef(messages.length);
 
     // Typing animation for the initial message
-    const initialMessage = "Share your dream career or passion, and I'll help you build a capstone project around it!";
+    const initialMessage = "Share your dream career or passion, and I'll help you build a project template around it!";
     const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0);
 
     // logic to auto-scroll to bottom on new responses, QOL feature.
@@ -53,12 +53,12 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
         return (
             <div className="h-full min-h-[400px] flex items-center justify-center py-8 px-8">
                 <div className="text-center max-w-md">
+                    <p className="text-gray-600 dark:text-gray-300 text-xl font-light leading-relaxed mb-4">
+                        {animatedInitialMessage}
+                    </p>
                     <div className="text-gray-400 dark:text-gray-500 text-sm mb-4 font-light">
                         Message History will appear here
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-xl font-light leading-relaxed">
-                        {animatedInitialMessage}
-                    </p>
                 </div>
             </div>
         );
