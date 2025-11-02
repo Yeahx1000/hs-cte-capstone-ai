@@ -1,27 +1,26 @@
 "use client";
 import { signIn } from "next-auth/react";
+import BlackHoleBackground from "@/components/BlackHoleBackground";
 
 export default function LoginPage() {
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-[#1A1A1A]">
-            <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full px-6 py-8">
+        <div className="flex flex-col min-h-screen bg-white dark:bg-[#191919] relative overflow-hidden">
+            <BlackHoleBackground />
+            <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full px-6 py-8 relative z-10">
                 <div className="w-full space-y-8">
                     <div className="text-center">
                         <h1 className="text-6xl font-light text-gray-900 dark:text-white mb-4">
                             Capris
                         </h1>
                         <p className="text-lg text-gray-600 dark:text-gray-400 font-light">
-                            Plan your CTE Pathway Capstone Project with AI assistance
+                            Your CTE Capstone Project Assistant
                         </p>
                     </div>
 
                     <div className="bg-gray-50 dark:bg-[#2A2A2A] rounded-2xl border border-gray-200 dark:border-gray-700 p-8 space-y-6">
                         <div>
-                            <h2 className="text-xl font-light text-gray-900 dark:text-gray-100 mb-2">
-                                Welcome
-                            </h2>
                             <p className="text-sm text-gray-600 dark:text-gray-400 font-light">
-                                Sign in with your Google account to get started planning your capstone project.
+                                Sign in with your Google account to get started.
                             </p>
                         </div>
 
