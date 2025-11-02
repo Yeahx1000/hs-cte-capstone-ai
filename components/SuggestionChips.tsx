@@ -78,7 +78,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
             <div className="overflow-hidden relative mx-8">
                 {/* Left fade gradient */}
                 {canScrollLeft && (
-                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-[#1A1A1A] to-transparent pointer-events-none z-10" />
+                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-linear-to-r from-white dark:from-[#1A1A1A] to-transparent pointer-events-none z-10" />
                 )}
 
                 {/* Scrollable container - allows chips to extend beyond visible area */}
@@ -95,7 +95,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
                             key={idx}
                             onClick={() => !disabled && onSuggestionClick(suggestion)}
                             disabled={disabled}
-                            className="flex-shrink-0 px-4 py-2 bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:bg-gray-300 dark:active:bg-[#4A4A4A] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="shrink-0 px-4 py-2 bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:bg-gray-300 dark:active:bg-[#4A4A4A] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             {suggestion}
                         </button>
@@ -104,7 +104,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
 
                 {/* Right fade gradient */}
                 {canScrollRight && (
-                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-[#1A1A1A] to-transparent pointer-events-none z-10" />
+                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-linear-to-l from-white dark:from-[#1A1A1A] to-transparent pointer-events-none z-10" />
                 )}
             </div>
 
