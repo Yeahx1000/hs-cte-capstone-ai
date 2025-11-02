@@ -128,6 +128,7 @@ export const useChat = () => {
             const assistantMessage: Message = {
                 role: "assistant",
                 content: data.response || data.message || "I'm here to help you plan your capstone project. Let's continue our conversation!",
+                suggested_replies: data.suggested_replies || undefined,
             };
 
             setMessages((prev) => [...prev, assistantMessage]);

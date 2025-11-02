@@ -105,24 +105,11 @@ export default function ChatPage() {
                             loading={loading}
                             onSendMessage={handleSendMessage}
                             conversationState={conversationState}
+                            onReviewClick={handleReviewClick}
+                            reviewLoading={reviewLoading}
+                            manifestGenerating={manifestGenerating}
                         />
                     </div>
-                    {conversationState?.phase === "review" && !loading && (
-                        <div className="mt-6 p-4 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-2xl shrink-0">
-                            <p className="text-sm text-gray-800 dark:text-gray-200 mb-3 font-light">
-                                Ready to review your capstone plan?
-                            </p>
-                            <button
-                                onClick={handleReviewClick}
-                                disabled={reviewLoading || manifestGenerating}
-                                className="w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                {reviewLoading || manifestGenerating
-                                    ? "Generating Plan..."
-                                    : "Review Your Capstone Plan"}
-                            </button>
-                        </div>
-                    )}
                     {error && (
                         <div className="mt-6 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl shrink-0">
                             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

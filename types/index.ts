@@ -1,6 +1,7 @@
 export interface Message {
     role: "user" | "assistant";
     content: string;
+    suggested_replies?: string[];
 }
 
 export type ConversationPhase = "brainstorm" | "review" | "complete";
