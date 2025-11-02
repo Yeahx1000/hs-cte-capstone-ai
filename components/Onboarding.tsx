@@ -60,10 +60,10 @@ export default function Onboarding({ user }: OnboardingProps) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="w-full max-w-2xl flex flex-col items-center">
           <h1 className="text-6xl font-light text-gray-900 dark:text-white mb-4 text-center tracking-tight">
-            Hi, I'm Capris! ✌️
+            Capris ✌️
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 text-center font-light">
-            I'll be helping you plan your CTE Capstone Project.
+            Helping you plan your CTE Capstone Project.
           </p>
 
           {/* Form */}

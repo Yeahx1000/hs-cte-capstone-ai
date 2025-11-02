@@ -11,6 +11,7 @@ const MAX_TURNS = 5; // Max num of turns before moving to review, might be too s
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
+    const [manifestGenerating, setManifestGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [manifest, setManifest] = useState<Manifest | null>(null);
     const [conversationState, setConversationState] = useState<ConversationState>({
@@ -140,7 +141,7 @@ export const useChat = () => {
     }, [messages, conversationState]);
 
     const generateManifest = useCallback(async (onboardingData?: any) => {
-        setLoading(true);
+        setManifestGenerating(true);
         setError(null);
 
         try {
@@ -184,13 +185,14 @@ export const useChat = () => {
             setError(err instanceof Error ? err.message : "An error occurred");
             return null;
         } finally {
-            setLoading(false);
+            setManifestGenerating(false);
         }
     }, [messages]);
 
     return {
         messages,
         loading,
+        manifestGenerating,
         error,
         manifest,
         sendMessage,

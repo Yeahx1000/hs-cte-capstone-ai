@@ -44,9 +44,25 @@ function Chat({ messages, loading, onSendMessage, conversationState, onReviewCli
                             disabled={reviewLoading || manifestGenerating}
                             className="w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            {reviewLoading || manifestGenerating
-                                ? "Generating Plan..."
-                                : "Review Your Capstone Plan"}
+                            {/* animation for generating plan text */}
+                            {reviewLoading || manifestGenerating ? (
+                                <span className="inline-flex items-center justify-center">
+                                    {"Generating Plan...".split("").map((char, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="inline-block"
+                                            style={{
+                                                animation: `wave 1.5s ease-in-out infinite`,
+                                                animationDelay: `${idx * 0.05}s`,
+                                            }}
+                                        >
+                                            {char === " " ? "\u00A0" : char}
+                                        </span>
+                                    ))}
+                                </span>
+                            ) : (
+                                "Review Your Capstone Plan"
+                            )}
                         </button>
                     </div>
                 </div>

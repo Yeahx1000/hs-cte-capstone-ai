@@ -6,15 +6,12 @@ import Chat from "@/components/Chat";
 import UserMenu from "@/components/UserMenu";
 import { useChat } from "@/lib/hooks/useChat";
 
-// FIXME: this page is a bit of a mess, handling of manifest generation is slow and clunky, needs major optimization.
-
 export default function ChatPage() {
     const router = useRouter();
     const { data: session } = useSession();
-    const { messages, loading, error, manifest, sendMessage, conversationState, generateManifest } = useChat();
+    const { messages, loading, error, manifest, sendMessage, conversationState, generateManifest, manifestGenerating } = useChat();
     const [onboardingData, setOnboardingData] = useState<any>(null);
     const [reviewLoading, setReviewLoading] = useState(false);
-    const [manifestGenerating, setManifestGenerating] = useState(false);
 
     useEffect(() => {
         // Get onboarding data from sessionStorage (optional)
@@ -29,49 +26,75 @@ export default function ChatPage() {
         }
     }, [router]);
 
-    // Auto-generate manifest when phase becomes "review" and manifest doesn't exist
+    // Prefetch review page when approaching review phase or when we have enough turns
     useEffect(() => {
-        if (conversationState?.phase === "review" && !manifest && !manifestGenerating && !loading && messages.length > 0) {
+        if (conversationState?.phase === "review") {
+            router.prefetch("/review");
+        } else if (conversationState?.turnCount >= 3) {
+            // Start prefetching when close to review phase
+            router.prefetch("/review");
+        }
+    }, [conversationState?.phase, conversationState?.turnCount, router]);
+
+    // Prefetch manifest data when review button is about to appear
+    useEffect(() => {
+        // Start generating manifest in background when we have enough data
+        if (conversationState?.phase === "review" && !manifest && !manifestGenerating && !loading && messages.length >= 4) {
             const storedManifest = sessionStorage.getItem("manifest");
+            // Only prefetch if we don't already have a manifest
             if (!storedManifest) {
-                setManifestGenerating(true);
-                generateManifest()
-                    .then(() => {
-                        setManifestGenerating(false);
-                    })
-                    .catch(() => {
-                        setManifestGenerating(false);
-                    });
+                // Don't await - let it run in background
+                generateManifest(onboardingData).catch(() => {
+                    // Silently fail - user can regenerate if needed
+                });
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [conversationState?.phase, manifest, manifestGenerating, loading, messages.length]);
-
-    useEffect(() => {
-        if (conversationState?.phase === "review") {
-            router.prefetch("/review");
-        }
-    }, [conversationState?.phase, router]);
 
     const handleSendMessage = (content: string) => {
         sendMessage(content, onboardingData);
     };
 
     const handleReviewClick = async () => {
-        // Always regenerate manifest to ensure fresh data with onboarding CTE pathway
         if (messages.length > 0) {
             setReviewLoading(true);
             try {
-                // Clear old manifest to force regeneration
-                sessionStorage.removeItem("manifest");
-                const generated = await generateManifest(onboardingData);
-                if (generated) {
-                    // Small delay to ensure sessionStorage is written
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    router.push("/review");
-                } else {
-                    alert("Failed to generate capstone plan. Please try again.");
+                // Check if manifest was already generated in background
+                const storedManifest = sessionStorage.getItem("manifest");
+                let shouldGenerate = true;
+                
+                if (storedManifest) {
+                    try {
+                        const parsed = JSON.parse(storedManifest);
+                        // Use existing manifest if it's valid and we're not forced to regenerate
+                        if (parsed && parsed.title && parsed.ctePathway) {
+                            // If there's already a valid manifest, use it
+                            // But still ensure CTE pathway matches onboarding
+                            if (onboardingData?.ctePathway && parsed.ctePathway !== onboardingData.ctePathway) {
+                                parsed.ctePathway = onboardingData.ctePathway;
+                                sessionStorage.setItem("manifest", JSON.stringify(parsed));
+                            }
+                            shouldGenerate = false;
+                        }
+                    } catch {
+                        // Invalid manifest, regenerate
+                    }
                 }
+                
+                if (shouldGenerate) {
+                    // Clear old manifest to force regeneration
+                    sessionStorage.removeItem("manifest");
+                    const generated = await generateManifest(onboardingData);
+                    if (!generated) {
+                        alert("Failed to generate capstone plan. Please try again.");
+                        return;
+                    }
+                }
+                
+                // Small delay to ensure sessionStorage is written
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.push("/review");
             } catch (err) {
                 alert("Failed to generate capstone plan. Please try again.");
             } finally {
