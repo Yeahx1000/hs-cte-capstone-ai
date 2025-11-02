@@ -7,9 +7,24 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
     const messagesLengthRef = useRef(messages.length);
+    const [initialMessage, setInitialMessage] = useState<string>("Share your dream career or passion, and I'll help you build a project template around it!");
+
+    // Get CTE pathway from onboarding data and build initial message
+    useEffect(() => {
+        const onboardingDataStr = sessionStorage.getItem("onboarding");
+        if (onboardingDataStr) {
+            try {
+                const onboardingData = JSON.parse(onboardingDataStr);
+                if (onboardingData?.ctePathway) {
+                    setInitialMessage(`Share your dream career or passion in ${onboardingData.ctePathway}, and I'll help you build a project template around it!`);
+                }
+            } catch {
+                // Invalid onboarding data, use default message
+            }
+        }
+    }, []);
 
     // Typing animation for the initial message
-    const initialMessage = "Share your dream career or passion, and I'll help you build a project template around it!";
     const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0);
 
     // logic to auto-scroll to bottom on new responses, QOL feature.
