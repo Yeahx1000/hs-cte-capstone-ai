@@ -60,7 +60,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
             {canScrollLeft && (
                 <button
                     onClick={scrollLeft}
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 shadow-md hover:bg-gray-50 dark:hover:bg-[#3A3A3A] flex items-center justify-center transition-all"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-[#2A2A2A] border border-[#E0E8E3] dark:border-[#2F3A30] shadow-md hover:bg-[#FAFCFB] dark:hover:bg-[#333D35] flex items-center justify-center transition-all"
                     aria-label="Scroll left"
                 >
                     <svg
@@ -95,7 +95,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
                             key={idx}
                             onClick={() => !disabled && onSuggestionClick(suggestion)}
                             disabled={disabled}
-                            className="shrink-0 px-4 py-2 bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:bg-gray-300 dark:active:bg-[#4A4A4A] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                            className="shrink-0 px-4 py-2 bg-[#F5F7F6] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-[#E0E8E3] dark:border-[#2F3A30] rounded-full text-sm font-medium hover:bg-[#EEF2F0] dark:hover:bg-[#333D35] active:bg-[#E8F0EB] dark:active:bg-[#3A453C] transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                         >
                             {suggestion}
                         </button>
@@ -112,7 +112,7 @@ function SuggestionChips({ suggestions, onSuggestionClick, disabled = false }: S
             {canScrollRight && (
                 <button
                     onClick={scrollRight}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 shadow-md hover:bg-gray-50 dark:hover:bg-[#3A3A3A] flex items-center justify-center transition-all"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white dark:bg-[#2A2A2A] border border-[#E0E8E3] dark:border-[#2F3A30] shadow-md hover:bg-[#FAFCFB] dark:hover:bg-[#333D35] flex items-center justify-center transition-all"
                     aria-label="Scroll right"
                 >
                     <svg

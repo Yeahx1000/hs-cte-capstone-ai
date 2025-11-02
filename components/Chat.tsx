@@ -35,7 +35,7 @@ function Chat({ messages, loading, onSendMessage, conversationState, onReviewCli
             {/* Review section or suggestion chips - both appear in the same location */}
             {showReviewSection ? (
                 <div className="shrink-0 mb-3 px-2">
-                    <div className="p-4 bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-2xl">
+                    <div className="p-4 bg-[#FAFCFB] dark:bg-[#2A2A2A] border border-[#E8F0EB] dark:border-[#2F3A30] rounded-2xl">
                         <p className="text-sm text-gray-800 dark:text-gray-200 mb-3 font-light">
                             Ready to review your capstone plan?
                         </p>

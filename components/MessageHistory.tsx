@@ -94,7 +94,7 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
                         <div
                             className={`max-w-[80%] rounded-3xl px-4 py-3 ${message.role === "user"
                                 ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900"
-                                : "bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700"
+                                : "bg-[#F5F7F6] dark:bg-[#2A2A2A] text-gray-900 dark:text-gray-100 border border-[#E0E8E3] dark:border-[#2F3A30]"
                                 }`}
                         >
                             <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -103,7 +103,7 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
                 ))}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="bg-gray-100 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 rounded-3xl px-4 py-3">
+                        <div className="bg-[#F5F7F6] dark:bg-[#2A2A2A] border border-[#E0E8E3] dark:border-[#2F3A30] rounded-3xl px-4 py-3">
                             <div className="flex gap-1">
                                 <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
                                 <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
