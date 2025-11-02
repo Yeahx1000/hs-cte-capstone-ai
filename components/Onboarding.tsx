@@ -13,7 +13,7 @@ export default function Onboarding({ user }: OnboardingProps) {
   const [showCteField, setShowCteField] = useState<boolean>(false);
 
   // Typing animations
-  const namePlaceholderText = "Hello, may I ask your name?";
+  const namePlaceholderText = "May I ask your name?";
   const namePlaceholder = useTypingAnimation(namePlaceholderText, 20, true);
 
   // CTE placeholder: animate whenever showCteField changes
@@ -60,10 +60,10 @@ export default function Onboarding({ user }: OnboardingProps) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="w-full max-w-2xl flex flex-col items-center">
           <h1 className="text-6xl font-light text-gray-900 dark:text-white mb-4 text-center tracking-tight">
-            Capris
+            Capris ✌️
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 text-center font-light">
-            Plan your CTE Pathway Capstone Project with AI assistance
+            Hello! I'm here to help you plan your Capstone Project.
           </p>
 
           {/* Form */}
