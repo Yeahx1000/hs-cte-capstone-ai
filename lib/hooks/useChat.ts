@@ -119,16 +119,26 @@ export const useChat = () => {
             if (data.manifest && data.manifest.title && data.manifest.ctePathway) {
                 setManifest(data.manifest);
                 sessionStorage.setItem("manifest", JSON.stringify(data.manifest));
-            } else if (data.title && data.ctePathway) {
+            } else if (data.title && data.ctePathway && data.objectives && data.deliverables && data.timeline && data.assessment && data.resources) {
                 // Direct manifest response
-                setManifest(data);
-                sessionStorage.setItem("manifest", JSON.stringify(data));
+                const manifest: Manifest = {
+                    title: data.title,
+                    ctePathway: data.ctePathway,
+                    objectives: data.objectives,
+                    deliverables: data.deliverables,
+                    timeline: data.timeline,
+                    assessment: data.assessment,
+                    resources: data.resources,
+                    ...(data.content && { content: data.content }),
+                };
+                setManifest(manifest);
+                sessionStorage.setItem("manifest", JSON.stringify(manifest));
             }
 
             // Add assistant response to messages
             const assistantMessage: Message = {
                 role: "assistant",
-                content: data.response || data.message || "I'm here to help you plan your capstone project. Let's continue our conversation!",
+                content: data.response || "I'm here to help you plan your capstone project. Let's continue our conversation!",
                 suggested_replies: data.suggested_replies || undefined,
             };
 
