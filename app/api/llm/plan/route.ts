@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import type { ChatCompletion } from "openai/resources/chat/completions";
 import { LLMPlanRequest, LLMPlanResponse, CapstoneManifest } from "@/types";
 import { ManifestSchema } from "@/lib/manifest";
 
-// edge runtime (this route only) for reduced latency and improved performance
-export const runtime = "edge";
+// nodejs runtime for longer timeout limits and better compatibility with OpenAI API
+export const runtime = "nodejs";
 
 /*
 This route is the main entry point for the LLM plan and chat conversation.
@@ -91,9 +92,37 @@ const MANIFEST_SYSTEM_PROMPT = [
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
+    timeout: 55000, // 55 seconds timeout (Node.js functions have 60s limit on Pro)
+    maxRetries: 2, // Retry up to 2 times on transient failures
 });
 
 const MAX_TURNS = 5; // Maximum number of assistant responses before moving to review
+
+// Helper function to create OpenAI request with timeout
+async function createChatCompletionWithTimeout(
+    params: Parameters<typeof openai.chat.completions.create>[0],
+    timeoutMs: number = 55000
+): Promise<ChatCompletion> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        const response = await Promise.race([
+            openai.chat.completions.create(params) as Promise<ChatCompletion>,
+            new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error("OpenAI request timeout")), timeoutMs);
+            }),
+        ]);
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (controller.signal.aborted || (error instanceof Error && error.message.includes("timeout"))) {
+            throw new Error("OpenAI request timeout");
+        }
+        throw error;
+    }
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
     try {
@@ -127,7 +156,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
             const system = MANIFEST_SYSTEM_PROMPT
 
-            const response = await openai.chat.completions.create({
+            const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0,
                 messages: [
@@ -170,7 +199,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
             const system = MANIFEST_SYSTEM_PROMPT
 
-            const response = await openai.chat.completions.create({
+            const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0,
                 messages: [
@@ -230,7 +259,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                 content: typeof message === "string" ? message : JSON.stringify(message),
             });
 
-            const response = await openai.chat.completions.create({
+            const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0,
                 messages,
@@ -315,7 +344,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                 content: typeof message === "string" ? message : JSON.stringify(message),
             });
 
-            const response = await openai.chat.completions.create({
+            const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0.2,
                 messages,
@@ -360,8 +389,53 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
     } catch (error) {
         console.error("OpenAI API error:", error);
+
+        // Handle specific error types
+        if (error instanceof Error) {
+            // Timeout errors
+            if (error.message.includes("timeout") || error.message.includes("Timeout")) {
+                return NextResponse.json(
+                    { error: "Request timed out. Please try again." },
+                    { status: 504 } // Gateway Timeout
+                );
+            }
+
+            // Rate limit errors
+            if (error.message.includes("rate_limit") || error.message.includes("429")) {
+                return NextResponse.json(
+                    { error: "Too many requests. Please try again in a moment." },
+                    { status: 429 }
+                );
+            }
+
+            // Network errors
+            if (error.message.includes("network") || error.message.includes("ECONNREFUSED")) {
+                return NextResponse.json(
+                    { error: "Network error. Please check your connection and try again." },
+                    { status: 502 }
+                );
+            }
+        }
+
+        // Check if it's an OpenAI API error
+        if (error && typeof error === "object" && "status" in error) {
+            const status = (error as { status?: number }).status;
+            if (status === 429) {
+                return NextResponse.json(
+                    { error: "Rate limit exceeded. Please try again in a moment." },
+                    { status: 429 }
+                );
+            }
+            if (status === 503) {
+                return NextResponse.json(
+                    { error: "Service temporarily unavailable. Please try again." },
+                    { status: 503 }
+                );
+            }
+        }
+
         return NextResponse.json(
-            { error: "Failed to get response from OpenAI" },
+            { error: "Failed to get response from OpenAI. Please try again." },
             { status: 500 }
         );
     }
