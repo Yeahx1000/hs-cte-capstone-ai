@@ -42,7 +42,7 @@ function Chat({ messages, loading, onSendMessage, conversationState, onReviewCli
                         <button
                             onClick={onReviewClick}
                             disabled={reviewLoading || manifestGenerating}
-                            className="w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="cursor-pointer w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {/* animation for generating plan text */}
                             {reviewLoading || manifestGenerating ? (

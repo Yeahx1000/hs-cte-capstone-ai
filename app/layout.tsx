@@ -32,8 +32,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Capris - CTE Capstone Planning",
-  description: "Plan your CTE Pathway Capstone Project with AI assistance",
+  title: "CTE Capstone Planner | Capris",
+  description: "CTE Pathway Capstone Project Planner with AI assistance",
 };
 
 export default function RootLayout({
