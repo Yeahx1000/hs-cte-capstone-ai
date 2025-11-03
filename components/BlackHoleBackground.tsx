@@ -4,6 +4,134 @@ import { useEffect, useRef, useState } from "react";
 // Black Hole Background: I borrowed and slightly modified this animation from codepen.io
 // Source: https://codepen.io/StarKnightt/pen/VYvZeom, felt like it was a good fit for the background.
 
+interface Star {
+    orbital: number;
+    x: number;
+    y: number;
+    yOrigin: number;
+    speed: number;
+    rotation: number;
+    startRotation: number;
+    id: number;
+    collapseBonus: number;
+    color: string;
+    hoverPos: number;
+    expansePos: number;
+    prevR: number;
+    prevX: number;
+    prevY: number;
+    originalY: number;
+    trail?: number;
+    draw: () => void;
+}
+
+const createStar = (
+    maxorbit: number,
+    centerx: number,
+    centery: number,
+    getParticleColor: (orbital: number) => string,
+    stars: Star[],
+    getCurrentTime: () => number,
+    getCollapse: () => boolean,
+    getExpanse: () => boolean,
+    getReturning: () => boolean,
+    context: CanvasRenderingContext2D,
+    rotate: (cx: number, cy: number, x: number, y: number, angle: number) => [number, number]
+): Star => {
+    const rands: number[] = [];
+    rands.push(Math.random() * (maxorbit / 2) + 1);
+    rands.push(Math.random() * (maxorbit / 2) + maxorbit);
+
+    const orbital = rands.reduce((p, c) => p + c, 0) / rands.length;
+    const star: Star = {
+        orbital,
+        x: centerx,
+        y: centery + orbital,
+        yOrigin: centery + orbital,
+        speed: (Math.floor(Math.random() * 2.5) + 1.5) * Math.PI / 180,
+        rotation: 0,
+        startRotation: (Math.floor(Math.random() * 360) + 1) * Math.PI / 180,
+        id: stars.length,
+        collapseBonus: 0,
+        color: getParticleColor(orbital),
+        hoverPos: 0,
+        expansePos: 0,
+        prevR: 0,
+        prevX: centerx,
+        prevY: centery + orbital,
+        originalY: centery + orbital,
+        draw() {
+            const currentTime = getCurrentTime();
+            const collapse = getCollapse();
+            const expanse = getExpanse();
+            const returning = getReturning();
+
+            if (!expanse && !returning) {
+                star.rotation = star.startRotation + currentTime * star.speed;
+                if (!collapse) {
+                    if (star.y > star.yOrigin) {
+                        star.y -= 2.5;
+                    }
+                    if (star.y < star.yOrigin - 4) {
+                        star.y += (star.yOrigin - star.y) / 10;
+                    }
+                } else {
+                    star.trail = 1;
+                    if (star.y > star.hoverPos) {
+                        star.y -= (star.hoverPos - star.y) / -5;
+                    }
+                    if (star.y < star.hoverPos - 4) {
+                        star.y += 2.5;
+                    }
+                }
+            } else if (expanse && !returning) {
+                star.rotation = star.startRotation + currentTime * (star.speed / 2);
+                if (star.y > star.expansePos) {
+                    star.y -= Math.floor(star.expansePos - star.y) / -80;
+                }
+            } else if (returning) {
+                star.rotation = star.startRotation + currentTime * star.speed;
+                if (Math.abs(star.y - star.originalY) > 2) {
+                    star.y += (star.originalY - star.y) / 50;
+                } else {
+                    star.y = star.originalY;
+                    star.yOrigin = star.originalY;
+                }
+            }
+
+            if (!context) return;
+
+            context.save();
+            context.fillStyle = star.color;
+            context.strokeStyle = star.color;
+            context.beginPath();
+            const oldPos = rotate(centerx, centery, star.prevX, star.prevY, -star.prevR);
+            context.moveTo(oldPos[0], oldPos[1]);
+            context.translate(centerx, centery);
+            context.rotate(star.rotation);
+            context.translate(-centerx, -centery);
+            context.lineTo(star.x, star.y);
+            context.stroke();
+            context.restore();
+
+            star.prevR = star.rotation;
+            star.prevX = star.x;
+            star.prevY = star.y;
+        }
+    };
+
+    star.collapseBonus = star.orbital - maxorbit * 0.7;
+    if (star.collapseBonus < 0) {
+        star.collapseBonus = 0;
+    }
+
+    star.hoverPos = centery + maxorbit / 2 + star.collapseBonus;
+    star.expansePos = centery + (star.id % 100) * -10 + (Math.floor(Math.random() * 20) + 1);
+    star.prevR = star.startRotation;
+
+    return star;
+};
+
 const BlackHoleBackground = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -39,9 +167,9 @@ const BlackHoleBackground = () => {
         let animationFrameId: number;
 
         const stars: Star[] = [];
-        let collapse = false;
-        let expanse = false;
-        let returning = false;
+        const collapse = false;
+        const expanse = false;
+        const returning = false;
 
         const getBackgroundColor = (alpha: number) => {
             return isDarkMode
@@ -79,7 +207,7 @@ const BlackHoleBackground = () => {
             }
         }
 
-        function rotate(cx: number, cy: number, x: number, y: number, angle: number) {
+        function rotate(cx: number, cy: number, x: number, y: number, angle: number): [number, number] {
             const radians = angle;
             const cos = Math.cos(radians);
             const sin = Math.sin(radians);
@@ -97,117 +225,6 @@ const BlackHoleBackground = () => {
         }
 
         updateDimensions();
-
-        class Star {
-            orbital: number;
-            x: number;
-            y: number;
-            yOrigin: number;
-            speed: number;
-            rotation: number;
-            startRotation: number;
-            id: number;
-            collapseBonus: number;
-            color: string;
-            hoverPos: number;
-            expansePos: number;
-            prevR: number;
-            prevX: number;
-            prevY: number;
-            originalY: number;
-            trail?: number;
-
-            constructor() {
-                const rands: number[] = [];
-                rands.push(Math.random() * (maxorbit / 2) + 1);
-                rands.push(Math.random() * (maxorbit / 2) + maxorbit);
-
-                this.orbital = rands.reduce((p, c) => p + c, 0) / rands.length;
-
-                this.x = centerx;
-                this.y = centery + this.orbital;
-
-                this.yOrigin = centery + this.orbital;
-
-                this.speed = (Math.floor(Math.random() * 2.5) + 1.5) * Math.PI / 180;
-                this.rotation = 0;
-                this.startRotation = (Math.floor(Math.random() * 360) + 1) * Math.PI / 180;
-
-                this.id = stars.length;
-
-                this.collapseBonus = this.orbital - maxorbit * 0.7;
-                if (this.collapseBonus < 0) {
-                    this.collapseBonus = 0;
-                }
-
-                this.color = getParticleColor(this.orbital);
-
-                this.hoverPos = centery + maxorbit / 2 + this.collapseBonus;
-                this.expansePos = centery + (this.id % 100) * -10 + (Math.floor(Math.random() * 20) + 1);
-
-                this.prevR = this.startRotation;
-                this.prevX = this.x;
-                this.prevY = this.y;
-
-                this.originalY = this.yOrigin;
-
-                stars.push(this);
-            }
-
-            draw() {
-                if (!expanse && !returning) {
-                    this.rotation = this.startRotation + currentTime * this.speed;
-                    if (!collapse) {
-                        if (this.y > this.yOrigin) {
-                            this.y -= 2.5;
-                        }
-                        if (this.y < this.yOrigin - 4) {
-                            this.y += (this.yOrigin - this.y) / 10;
-                        }
-                    } else {
-                        this.trail = 1;
-                        if (this.y > this.hoverPos) {
-                            this.y -= (this.hoverPos - this.y) / -5;
-                        }
-                        if (this.y < this.hoverPos - 4) {
-                            this.y += 2.5;
-                        }
-                    }
-                } else if (expanse && !returning) {
-                    this.rotation = this.startRotation + currentTime * (this.speed / 2);
-                    if (this.y > this.expansePos) {
-                        this.y -= Math.floor(this.expansePos - this.y) / -80;
-                    }
-                } else if (returning) {
-                    this.rotation = this.startRotation + currentTime * this.speed;
-                    if (Math.abs(this.y - this.originalY) > 2) {
-                        this.y += (this.originalY - this.y) / 50;
-                    } else {
-                        this.y = this.originalY;
-                        this.yOrigin = this.originalY;
-                    }
-                }
-
-                if (!context) return;
-
-                context.save();
-                context.fillStyle = this.color;
-                context.strokeStyle = this.color;
-                context.beginPath();
-                const oldPos = rotate(centerx, centery, this.prevX, this.prevY, -this.prevR);
-                context.moveTo(oldPos[0], oldPos[1]);
-                context.translate(centerx, centery);
-                context.rotate(this.rotation);
-                context.translate(-centerx, -centery);
-                context.lineTo(this.x, this.y);
-                context.stroke();
-                context.restore();
-
-                this.prevR = this.rotation;
-                this.prevX = this.x;
-                this.prevY = this.y;
-            }
-        }
 
         const handleResize = () => {
             updateDimensions();
@@ -240,8 +257,21 @@ const BlackHoleBackground = () => {
             context.fillRect(0, 0, cw, ch);
 
             for (let i = 0; i < 2500; i++) {
-                const star = new Star();
+                const star = createStar(
+                    maxorbit,
+                    centerx,
+                    centery,
+                    getParticleColor,
+                    stars,
+                    () => currentTime,
+                    () => collapse,
+                    () => expanse,
+                    () => returning,
+                    context,
+                    rotate
+                );
                 star.color = getParticleColor(star.orbital);
+                stars.push(star);
             }
 
             loop();

@@ -97,7 +97,7 @@ export default function ChatPage() {
 
                 // Open overlay with manifest
                 setIsReviewOpen(true);
-            } catch (err) {
+            } catch {
                 alert("Failed to generate capstone plan. Please try again.");
             } finally {
                 setReviewLoading(false);

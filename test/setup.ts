@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 vi.mock('next/server', () => {
     return {
         NextResponse: {
-            json: (body: any, init?: ResponseInit) =>
+            json: (body: unknown, init?: ResponseInit) =>
                 new Response(JSON.stringify(body), {
                     status: init?.status ?? 200,
                     headers: { 'Content-Type': 'application/json' }

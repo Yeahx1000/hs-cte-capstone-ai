@@ -2,8 +2,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 import { Manifest } from "@/lib/manifest";
 import { CapstoneCreateResponse, OnboardingData } from "@/types";
+
+interface ExtendedSession extends Session {
+    accessToken?: string;
+}
 
 // This is the review overlay component. was formerlly it's own page, but changed for (possibly better?) UX..?
 
@@ -19,7 +24,7 @@ interface SuccessModalData {
     docLink: string;
 }
 
-export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClose, onManifestUpdate }: ReviewOverlayProps) {
+export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClose: _onClose, onManifestUpdate }: ReviewOverlayProps) {
     const router = useRouter();
     const { data: session } = useSession();
     const [manifest, setManifest] = useState<Manifest>(initialManifest);
@@ -90,7 +95,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${(session as any).accessToken}`,
+                    "Authorization": `Bearer ${(session as ExtendedSession)?.accessToken ?? ""}`,
                 },
                 body: JSON.stringify({
                     manifest,

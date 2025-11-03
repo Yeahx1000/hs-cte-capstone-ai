@@ -10,7 +10,7 @@ import { ConversationPhase } from "@/types";
 export function getFallbackSuggestions(
     phase: ConversationPhase,
     turnCount: number,
-    ctePathway?: string
+    _ctePathway?: string
 ): string[] {
     if (phase === "review" || phase === "complete") {
         return [];

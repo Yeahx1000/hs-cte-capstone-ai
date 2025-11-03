@@ -8,7 +8,7 @@ import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanR
 
 // This hook manages the chat conversation state and logic.
 
-const MAX_TURNS = 5; // Max num of turns before moving to review, might be too short but whatever for now.
+// const MAX_TURNS = 5; // Max num of turns before moving to review, might be too short but whatever for now.
 
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -112,7 +112,7 @@ export const useChat = () => {
             const newPhase = (data.phase as ConversationPhase) || conversationState.phase;
             const newTurnCount = data.turnCount !== undefined ? data.turnCount : conversationState.turnCount + 1;
 
-            setConversationState((prev) => ({
+            setConversationState(() => ({
                 turnCount: newTurnCount,
                 phase: newPhase,
             }));

@@ -10,7 +10,7 @@ vi.mock("openai", () => {
     return {
         default: class {
             chat = { completions: { create: mockCreate } };
-            constructor(_: { apiKey?: string }) { }
+            constructor() { }
         }
     };
 });
