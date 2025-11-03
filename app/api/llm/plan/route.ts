@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import type { ChatCompletion } from "openai/resources/chat/completions";
 import { LLMPlanRequest, LLMPlanResponse, CapstoneManifest } from "@/types";
-import { ManifestSchema } from "@/lib/manifest";
 
 // nodejs runtime for longer timeout limits and better compatibility with OpenAI API
 export const runtime = "nodejs";
@@ -267,31 +266,23 @@ export async function POST(request: Request): Promise<NextResponse> {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: unknown;
+            let parsed: CapstoneManifest;
             try {
-                parsed = JSON.parse(content);
+                const temp = JSON.parse(content);
+                if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
+                    return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
+                }
+                parsed = temp as CapstoneManifest;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
 
-            // Validate with Zod schema
-            let validated: CapstoneManifest;
-            try {
-                validated = ManifestSchema.parse(parsed) as CapstoneManifest;
-            } catch (err) {
-                console.error("Manifest validation failed:", err);
-                return NextResponse.json(
-                    { error: "Invalid manifest format from model", details: err instanceof Error ? err.message : "Validation failed" },
-                    { status: 502 }
-                );
-            }
-
             // Ensure CTE pathway from onboarding is included if provided
-            if (onboardingData?.ctePathway && (!validated.ctePathway || validated.ctePathway !== onboardingData.ctePathway)) {
-                validated.ctePathway = onboardingData.ctePathway;
+            if (onboardingData?.ctePathway && (!parsed.ctePathway || parsed.ctePathway !== onboardingData.ctePathway)) {
+                parsed.ctePathway = onboardingData.ctePathway;
             }
 
-            return NextResponse.json(validated);
+            return NextResponse.json(parsed);
         } else {
             // Conversation mode - natural responses with strict turn limits
             const turnsRemaining = MAX_TURNS - currentTurnCount - 1; // -1 because we're about to send a response

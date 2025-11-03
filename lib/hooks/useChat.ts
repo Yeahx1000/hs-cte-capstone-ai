@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Manifest, ManifestSchema } from "@/lib/manifest";
+import { Manifest } from "@/lib/manifest";
 import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanResponse } from "@/types";
 
 // currently using this custom hook initialized before. 
@@ -119,15 +119,10 @@ export const useChat = () => {
 
             // If we get a manifest back, store it
             if (data.manifest && data.manifest.title && data.manifest.ctePathway) {
-                try {
-                    const validated = ManifestSchema.parse(data.manifest);
-                    setManifest(validated);
-                    sessionStorage.setItem("manifest", JSON.stringify(validated));
-                } catch (err) {
-                    console.error("Invalid manifest received:", err);
-                }
+                setManifest(data.manifest as Manifest);
+                sessionStorage.setItem("manifest", JSON.stringify(data.manifest));
             } else if (data.title && data.ctePathway && data.objectives && data.deliverables && data.timeline && data.assessment && data.resources) {
-                // Direct manifest response - construct and validate
+                // Direct manifest response - construct manifest
                 const manifestData = {
                     title: data.title,
                     ctePathway: data.ctePathway,
@@ -144,13 +139,8 @@ export const useChat = () => {
                     ...(data.reflectionPostsecondary && { reflectionPostsecondary: data.reflectionPostsecondary }),
                     ...(data.rubric && { rubric: data.rubric }),
                 };
-                try {
-                    const validated = ManifestSchema.parse(manifestData);
-                    setManifest(validated);
-                    sessionStorage.setItem("manifest", JSON.stringify(validated));
-                } catch (err) {
-                    console.error("Invalid manifest constructed:", err);
-                }
+                setManifest(manifestData as Manifest);
+                sessionStorage.setItem("manifest", JSON.stringify(manifestData));
             }
 
             // Add assistant response to messages
@@ -224,15 +214,10 @@ export const useChat = () => {
                 manifestData.ctePathway = onboardingData.ctePathway;
             }
 
-            try {
-                const validated = ManifestSchema.parse(manifestData);
-                setManifest(validated);
-                sessionStorage.setItem("manifest", JSON.stringify(validated));
-                return validated;
-            } catch (err) {
-                console.error("Invalid manifest generated:", err);
-                throw new Error("Generated manifest failed validation");
-            }
+            // Use manifest data directly without strict validation
+            setManifest(manifestData as Manifest);
+            sessionStorage.setItem("manifest", JSON.stringify(manifestData));
+            return manifestData as Manifest;
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
             return null;
