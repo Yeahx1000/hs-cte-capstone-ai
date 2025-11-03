@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Manifest } from "@/lib/manifest";
-import { Message, ConversationPhase, ConversationState } from "@/types";
+import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanResponse } from "@/types";
 
 // currently using this custom hook initialized before. 
 // Reason? I feel it helps to manage state and logic for the chat component in a more organized way. 
@@ -55,7 +55,7 @@ export const useChat = () => {
         }
     }, [messages]);
 
-    const sendMessage = useCallback(async (content: string, onboardingData?: any) => {
+    const sendMessage = useCallback(async (content: string, onboardingData?: OnboardingData): Promise<void> => {
         if (!content.trim()) return;
 
         // Prevent sending messages if we're in review or complete phase, 
@@ -104,7 +104,7 @@ export const useChat = () => {
                 throw new Error("Failed to get response");
             }
 
-            const data = await response.json();
+            const data = await response.json() as LLMPlanResponse;
 
             // Checking for conversation phase changed (moved to review etc, based on turn count)
             const newPhase = (data.phase as ConversationPhase) || conversationState.phase;
@@ -140,7 +140,7 @@ export const useChat = () => {
         }
     }, [messages, conversationState]);
 
-    const generateManifest = useCallback(async (onboardingData?: any) => {
+    const generateManifest = useCallback(async (onboardingData?: OnboardingData): Promise<Manifest | null> => {
         setManifestGenerating(true);
         setError(null);
 
@@ -171,16 +171,17 @@ export const useChat = () => {
                 throw new Error("Failed to generate manifest");
             }
 
-            const data = await response.json();
+            const data = await response.json() as LLMPlanResponse;
 
             // Ensure CTE pathway from onboarding is included if not in generated manifest
-            if (onboardingData?.ctePathway && (!data.ctePathway || data.ctePathway !== onboardingData.ctePathway)) {
-                data.ctePathway = onboardingData.ctePathway;
+            const manifest: Manifest = data as Manifest;
+            if (onboardingData?.ctePathway && (!manifest.ctePathway || manifest.ctePathway !== onboardingData.ctePathway)) {
+                manifest.ctePathway = onboardingData.ctePathway;
             }
 
-            setManifest(data);
-            sessionStorage.setItem("manifest", JSON.stringify(data));
-            return data;
+            setManifest(manifest);
+            sessionStorage.setItem("manifest", JSON.stringify(manifest));
+            return manifest;
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
             return null;

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Manifest } from "@/lib/manifest";
+import { CapstoneCreateResponse, OnboardingData } from "@/types";
 
 interface ReviewOverlayProps {
     manifest: Manifest;
@@ -36,7 +37,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
         const onboardingDataStr = sessionStorage.getItem("onboarding");
         if (onboardingDataStr) {
             try {
-                const onboardingData = JSON.parse(onboardingDataStr);
+                const onboardingData = JSON.parse(onboardingDataStr) as OnboardingData;
                 if (onboardingData?.name) {
                     setStudentName(onboardingData.name);
                 }
@@ -58,7 +59,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
         };
     }, [isOpen]);
 
-    const handleEdit = (field: keyof Manifest, value: any) => {
+    const handleEdit = <K extends keyof Manifest>(field: K, value: Manifest[K]): void => {
         if (!manifest) return;
         const updated = { ...manifest, [field]: value };
         setManifest(updated);
@@ -71,7 +72,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
         onManifestUpdate?.(manifest);
     };
 
-    const handleCreateInDrive = async () => {
+    const handleCreateInDrive = async (): Promise<void> => {
         if (!manifest || !session?.user) return;
 
         setLoading(true);
@@ -96,11 +97,11 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json() as { error?: string };
                 throw new Error(errorData.error || "Failed to create capstone files in Drive");
             }
 
-            const data = await response.json();
+            const data = await response.json() as CapstoneCreateResponse;
 
             // Show success modal with links to all created files
             setSuccessData({

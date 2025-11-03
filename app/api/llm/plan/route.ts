@@ -1,10 +1,82 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { LLMPlanRequest, LLMPlanResponse, CapstoneManifest } from "@/types";
+import { Manifest } from "@/lib/manifest";
 
 export const runtime = "edge";
 
 // OpenAI API client
 // We need to mold the responses from llm better, right now they're... serviceable, but not great.
+
+const MANIFEST_SYSTEM_PROMPT = [
+    "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
+    "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
+    "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
+    "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
+    "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
+    "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
+    "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
+    "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
+    "- publicPresentation: duration, panel members, rubric criteria",
+    "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
+    "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
+    "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
+    "Return ONLY valid JSON with this structure:",
+    "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
+    JSON.stringify({
+        title: "string",
+        ctePathway: "string",
+        objectives: ["string"],
+        deliverables: ["string"],
+        timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
+        assessment: ["string"],
+        resources: ["string"],
+        projectProposal: {
+            problemOpportunity: "string",
+            industryContext: "string",
+            endUser: "string",
+            successCriteria: ["string"],
+            mentor: "string"
+        },
+        workBasedLearning: {
+            activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
+            hours: 0,
+            description: "string",
+            artifacts: ["string"]
+        },
+        deliverablesDetail: {
+            technicalProduct: "string",
+            processEvidence: ["string"],
+            industryFeedback: "string",
+            standardsMap: ["string"]
+        },
+        publicPresentation: {
+            duration: "string",
+            panelMembers: ["string"],
+            rubricCriteria: ["string"]
+        },
+        reflectionPostsecondary: {
+            reflection: "string",
+            coursework: ["string"],
+            training: ["string"],
+            credentials: ["string"],
+            apprenticeship: ["string"],
+            collegeMajor: ["string"]
+        },
+        rubric: {
+            technicalQuality: ["string"],
+            workBasedIntegration: ["string"],
+            communicationProfessionalism: ["string"],
+            reflectionNextSteps: ["string"]
+        },
+        content: {
+            docText: "string - formatted text content for Google Docs",
+            csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
+            slideOutline: [{ title: "string", content: ["string"] }],
+        },
+    }),
+].join("\n");
+
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -12,9 +84,10 @@ const openai = new OpenAI({
 
 const MAX_TURNS = 5; // Maximum number of assistant responses before moving to review
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
     try {
-        const { message, conversation, generateManifest, turnCount = 0, phase = "brainstorm", onboardingData } = await request.json();
+        const body = await request.json() as LLMPlanRequest;
+        const { message, conversation, generateManifest, turnCount = 0, phase = "brainstorm", onboardingData } = body;
 
         if (!message) {
             return NextResponse.json(
@@ -41,74 +114,7 @@ export async function POST(request: Request) {
                 ? conversation.map((m: { role: string; content: string }) => `${m.role}: ${m.content}`).join("\n")
                 : message;
 
-            const system = [
-                "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
-                "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
-                "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
-                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
-                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
-                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
-                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
-                "- publicPresentation: duration, panel members, rubric criteria",
-                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
-                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
-                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
-                "Return ONLY valid JSON with this structure:",
-                "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
-                JSON.stringify({
-                    title: "string",
-                    ctePathway: "string",
-                    objectives: ["string"],
-                    deliverables: ["string"],
-                    timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
-                    assessment: ["string"],
-                    resources: ["string"],
-                    projectProposal: {
-                        problemOpportunity: "string",
-                        industryContext: "string",
-                        endUser: "string",
-                        successCriteria: ["string"],
-                        mentor: "string"
-                    },
-                    workBasedLearning: {
-                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
-                        hours: 0,
-                        description: "string",
-                        artifacts: ["string"]
-                    },
-                    deliverablesDetail: {
-                        technicalProduct: "string",
-                        processEvidence: ["string"],
-                        industryFeedback: "string",
-                        standardsMap: ["string"]
-                    },
-                    publicPresentation: {
-                        duration: "string",
-                        panelMembers: ["string"],
-                        rubricCriteria: ["string"]
-                    },
-                    reflectionPostsecondary: {
-                        reflection: "string",
-                        coursework: ["string"],
-                        training: ["string"],
-                        credentials: ["string"],
-                        apprenticeship: ["string"],
-                        collegeMajor: ["string"]
-                    },
-                    rubric: {
-                        technicalQuality: ["string"],
-                        workBasedIntegration: ["string"],
-                        communicationProfessionalism: ["string"],
-                        reflectionNextSteps: ["string"]
-                    },
-                    content: {
-                        docText: "string - formatted text content for Google Docs",
-                        csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
-                        slideOutline: [{ title: "string", content: ["string"] }],
-                    },
-                }),
-            ].join("\n");
+            const system = MANIFEST_SYSTEM_PROMPT
 
             const response = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
@@ -121,13 +127,13 @@ export async function POST(request: Request) {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: Record<string, unknown>;
+            let parsed: CapstoneManifest;
             try {
                 const temp = JSON.parse(content);
                 if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
                     return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
                 }
-                parsed = temp as Record<string, unknown>;
+                parsed = temp as CapstoneManifest;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -141,7 +147,7 @@ export async function POST(request: Request) {
                 ...parsed,
                 phase: "complete",
                 turnCount: currentTurnCount,
-            });
+            } as LLMPlanResponse);
         }
 
         // Hard cutoff: if turnCount >= MAX_TURNS, generate manifest and return it
@@ -151,74 +157,7 @@ export async function POST(request: Request) {
                 ? conversation.map((m: { role: string; content: string }) => `${m.role}: ${m.content}`).join("\n")
                 : message;
 
-            const system = [
-                "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
-                "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
-                "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
-                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
-                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
-                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
-                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
-                "- publicPresentation: duration, panel members, rubric criteria",
-                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
-                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
-                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
-                "Return ONLY valid JSON with this structure:",
-                "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
-                JSON.stringify({
-                    title: "string",
-                    ctePathway: "string",
-                    objectives: ["string"],
-                    deliverables: ["string"],
-                    timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
-                    assessment: ["string"],
-                    resources: ["string"],
-                    projectProposal: {
-                        problemOpportunity: "string",
-                        industryContext: "string",
-                        endUser: "string",
-                        successCriteria: ["string"],
-                        mentor: "string"
-                    },
-                    workBasedLearning: {
-                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
-                        hours: 0,
-                        description: "string",
-                        artifacts: ["string"]
-                    },
-                    deliverablesDetail: {
-                        technicalProduct: "string",
-                        processEvidence: ["string"],
-                        industryFeedback: "string",
-                        standardsMap: ["string"]
-                    },
-                    publicPresentation: {
-                        duration: "string",
-                        panelMembers: ["string"],
-                        rubricCriteria: ["string"]
-                    },
-                    reflectionPostsecondary: {
-                        reflection: "string",
-                        coursework: ["string"],
-                        training: ["string"],
-                        credentials: ["string"],
-                        apprenticeship: ["string"],
-                        collegeMajor: ["string"]
-                    },
-                    rubric: {
-                        technicalQuality: ["string"],
-                        workBasedIntegration: ["string"],
-                        communicationProfessionalism: ["string"],
-                        reflectionNextSteps: ["string"]
-                    },
-                    content: {
-                        docText: "string - formatted text content for Google Docs",
-                        csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
-                        slideOutline: [{ title: "string", content: ["string"] }],
-                    },
-                }),
-            ].join("\n");
+            const system = MANIFEST_SYSTEM_PROMPT
 
             const response = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
@@ -231,13 +170,13 @@ export async function POST(request: Request) {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: Record<string, unknown>;
+            let parsed: CapstoneManifest;
             try {
                 const temp = JSON.parse(content);
                 if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
                     return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
                 }
-                parsed = temp as Record<string, unknown>;
+                parsed = temp as CapstoneManifest;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -251,7 +190,7 @@ export async function POST(request: Request) {
                 ...parsed,
                 phase: "review",
                 turnCount: MAX_TURNS,
-            });
+            } as LLMPlanResponse);
         }
 
         // Build conversation history for context
@@ -259,76 +198,7 @@ export async function POST(request: Request) {
 
         if (generateManifest) {
             // Manifest generation mode - return structured JSON with content for Google Docs, Sheets, and Slides
-            const system = [
-                "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
-                "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-                "start by giving a list of CTE pathways and their descriptions, then ask the student what they are interested in, then help them choose a pathway based on their interests and skills.",
-                "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
-                "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
-                "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
-                "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
-                "- workBasedLearning: activity type (professional-interview, job-shadow, internship, youth-apprenticeship, on-the-job-training), hours, description, artifacts",
-                "- deliverablesDetail: technical product, process evidence, industry feedback, standards map",
-                "- publicPresentation: duration, panel members, rubric criteria",
-                "- reflectionPostsecondary: reflection, coursework, training, credentials, apprenticeship, collegeMajor",
-                "- rubric: technicalQuality, workBasedIntegration, communicationProfessionalism, reflectionNextSteps",
-                "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
-                "Return ONLY valid JSON with this structure:",
-                "IMPORTANT: answers should be brief, on sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
-                "The goal is to get to providing a capstone template in max 10 prompts, preferably 5-7 prompts",
-                JSON.stringify({
-                    title: "string",
-                    ctePathway: "string",
-                    objectives: ["string"],
-                    deliverables: ["string"],
-                    timeline: [{ phase: "string", weeks: 0, tasks: ["string"] }],
-                    assessment: ["string"],
-                    resources: ["string"],
-                    projectProposal: {
-                        problemOpportunity: "string",
-                        industryContext: "string",
-                        endUser: "string",
-                        successCriteria: ["string"],
-                        mentor: "string"
-                    },
-                    workBasedLearning: {
-                        activityType: "professional-interview | job-shadow | internship | youth-apprenticeship | on-the-job-training | other",
-                        hours: 0,
-                        description: "string",
-                        artifacts: ["string"]
-                    },
-                    deliverablesDetail: {
-                        technicalProduct: "string",
-                        processEvidence: ["string"],
-                        industryFeedback: "string",
-                        standardsMap: ["string"]
-                    },
-                    publicPresentation: {
-                        duration: "string",
-                        panelMembers: ["string"],
-                        rubricCriteria: ["string"]
-                    },
-                    reflectionPostsecondary: {
-                        reflection: "string",
-                        coursework: ["string"],
-                        training: ["string"],
-                        credentials: ["string"],
-                        apprenticeship: ["string"],
-                        collegeMajor: ["string"]
-                    },
-                    rubric: {
-                        technicalQuality: ["string"],
-                        workBasedIntegration: ["string"],
-                        communicationProfessionalism: ["string"],
-                        reflectionNextSteps: ["string"]
-                    },
-                    content: {
-                        docText: "string - formatted text content for Google Docs",
-                        csvData: [["Header1", "Header2"], ["Row1Col1", "Row1Col2"]],
-                        slideOutline: [{ title: "string", content: ["string"] }],
-                    },
-                }),
-            ].join("\n");
+            const system = MANIFEST_SYSTEM_PROMPT
 
             messages.push({ role: "system", content: system });
 
@@ -357,9 +227,9 @@ export async function POST(request: Request) {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: any;
+            let parsed: CapstoneManifest;
             try {
-                parsed = JSON.parse(content);
+                parsed = JSON.parse(content) as CapstoneManifest;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -445,13 +315,13 @@ export async function POST(request: Request) {
             const newPhase = shouldMoveToReview ? "review" : currentPhase;
 
             // Check if the response contains a manifest-like structure
-            let manifest = null;
+            let manifest: CapstoneManifest | null = null;
             try {
                 const jsonMatch = content.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
+                    const parsed = JSON.parse(jsonMatch[0]) as Partial<CapstoneManifest>;
                     if (parsed.title && parsed.ctePathway) {
-                        manifest = parsed;
+                        manifest = parsed as CapstoneManifest;
                     }
                 }
             } catch {

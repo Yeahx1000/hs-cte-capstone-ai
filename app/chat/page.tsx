@@ -6,11 +6,12 @@ import UserMenu from "@/components/UserMenu";
 import ReviewOverlay from "@/components/ReviewOverlay";
 import { useChat } from "@/lib/hooks/useChat";
 import { Manifest } from "@/lib/manifest";
+import { OnboardingData } from "@/types";
 
 export default function ChatPage() {
     const { data: session } = useSession();
     const { messages, loading, error, manifest, sendMessage, conversationState, generateManifest, manifestGenerating } = useChat();
-    const [onboardingData, setOnboardingData] = useState<any>(null);
+    const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
     const [reviewLoading, setReviewLoading] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
     const [currentManifest, setCurrentManifest] = useState<Manifest | null>(null);
@@ -20,7 +21,7 @@ export default function ChatPage() {
         const data = sessionStorage.getItem("onboarding");
         if (data) {
             try {
-                const parsedData = JSON.parse(data);
+                const parsedData = JSON.parse(data) as OnboardingData;
                 setOnboardingData(parsedData);
             } catch {
                 // Invalid data, just continue without it
@@ -43,7 +44,7 @@ export default function ChatPage() {
             // Only prefetch if we don't already have a manifest
             if (!storedManifest) {
                 // Don't await - let it run in background
-                generateManifest(onboardingData).catch(() => {
+                generateManifest(onboardingData ?? undefined).catch(() => {
                     // Silently fail - user can regenerate if needed
                 });
             }
@@ -52,10 +53,10 @@ export default function ChatPage() {
     }, [conversationState?.phase, manifest, manifestGenerating, loading, messages.length]);
 
     const handleSendMessage = (content: string) => {
-        sendMessage(content, onboardingData);
+        sendMessage(content, onboardingData ?? undefined);
     };
 
-    const handleReviewClick = async () => {
+    const handleReviewClick = async (): Promise<void> => {
         if (messages.length > 0) {
             setReviewLoading(true);
             try {
@@ -65,7 +66,7 @@ export default function ChatPage() {
 
                 if (storedManifest) {
                     try {
-                        const parsed = JSON.parse(storedManifest);
+                        const parsed = JSON.parse(storedManifest) as Manifest;
                         // Use existing manifest if it's valid and we're not forced to regenerate
                         if (parsed && parsed.title && parsed.ctePathway) {
                             // If there's already a valid manifest, use it
@@ -85,7 +86,7 @@ export default function ChatPage() {
                 if (shouldGenerate) {
                     // Clear old manifest to force regeneration
                     sessionStorage.removeItem("manifest");
-                    const generated = await generateManifest(onboardingData);
+                    const generated = await generateManifest(onboardingData ?? undefined);
                     if (!generated) {
                         alert("Failed to generate capstone plan. Please try again.");
                         return;
@@ -105,7 +106,7 @@ export default function ChatPage() {
             const storedManifest = sessionStorage.getItem("manifest");
             if (storedManifest) {
                 try {
-                    const parsed = JSON.parse(storedManifest);
+                    const parsed = JSON.parse(storedManifest) as Manifest;
                     if (parsed && parsed.title && parsed.ctePathway) {
                         setCurrentManifest(parsed);
                         setIsReviewOpen(true);

@@ -1,13 +1,43 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { POST } from "./route";
 
-// not actual test, just a filler for now
+vi.mock("googleapis", () => ({
+    google: {
+        drive: vi.fn(() => ({
+            files: {
+                create: vi.fn().mockResolvedValue({
+                    data: {
+                        id: "test-file-id",
+                        name: "test.txt",
+                        webViewLink: "https://drive.google.com/file/d/test-file-id"
+                    }
+                })
+            }
+        }))
+    },
+    auth: {
+        GoogleAuth: vi.fn().mockImplementation(() => ({}))
+    }
+}));
 
-describe("Drive Create Route", () => {
-    it("should create a file in Google Drive", async () => {
-        const response = await fetch("/api/drive/create", {
-            method: "POST",
-            body: JSON.stringify({ fileName: "test.txt", fileContent: "Hello, world!" }),
-        });
-        expect(response.status).toBe(200);
+describe("POST /api/drive/create", () => {
+    beforeEach(() => {
+        process.env.GOOGLE_CLIENT_EMAIL = "test@example.com";
+        process.env.GOOGLE_PRIVATE_KEY = "test-key";
+    });
+
+    it("validates required fields", async () => {
+        const req = { json: async () => ({}) } as unknown as Request;
+        const res = await POST(req);
+        expect(res.status).toBe(400);
+    });
+
+    it("requires Google credentials", async () => {
+        delete process.env.GOOGLE_CLIENT_EMAIL;
+        const req = {
+            json: async () => ({ fileName: "test.txt", fileContent: "content" })
+        } as unknown as Request;
+        const res = await POST(req);
+        expect(res.status).toBe(500);
     });
 });

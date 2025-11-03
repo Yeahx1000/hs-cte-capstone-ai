@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { DriveCreateRequest } from "@/types";
 
 export const runtime = "nodejs";
 
 // Google Drive API client
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
     try {
-        const { fileName, fileContent, mimeType = "text/plain", folderId } = await request.json();
+        const body = await request.json() as DriveCreateRequest;
+        const { fileName, fileContent, mimeType = "text/plain", folderId } = body;
 
         if (!fileName || !fileContent) {
             return NextResponse.json(

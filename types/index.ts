@@ -110,3 +110,74 @@ export interface CapstoneManifest {
     reflectionPostsecondary?: ReflectionPostsecondary;
     rubric?: CapstoneRubric;
 }
+
+export interface OnboardingData {
+    name: string;
+    ctePathway: string;
+}
+
+// API Request Types
+export interface LLMPlanRequest {
+    message: string;
+    conversation?: Array<{ role: string; content: string }>;
+    generateManifest?: boolean;
+    turnCount?: number;
+    phase?: ConversationPhase;
+    onboardingData?: OnboardingData;
+}
+
+export interface CapstoneCreateRequest {
+    manifest: CapstoneManifest;
+    studentName?: string;
+}
+
+export interface DriveCreateRequest {
+    fileName: string;
+    fileContent: string;
+    mimeType?: string;
+    folderId?: string;
+}
+
+// API Response Types
+export interface LLMPlanResponse {
+    response?: string;
+    manifest?: CapstoneManifest;
+    phase: ConversationPhase;
+    turnCount: number;
+    suggested_replies?: string[];
+    // Manifest fields (when generateManifest is true)
+    title?: string;
+    ctePathway?: string;
+    objectives?: string[];
+    deliverables?: string[];
+    timeline?: Array<{ phase: string; weeks: number; tasks: string[] }>;
+    assessment?: string[];
+    resources?: string[];
+    projectProposal?: ProjectProposal;
+    workBasedLearning?: WorkBasedLearning;
+    deliverablesDetail?: DeliverablesDetail;
+    publicPresentation?: PublicPresentation;
+    reflectionPostsecondary?: ReflectionPostsecondary;
+    rubric?: CapstoneRubric;
+    content?: CapstoneContent;
+}
+
+export interface CapstoneCreateResponse {
+    success: boolean;
+    folderId: string;
+    folderLink: string;
+    files: {
+        doc: {
+            id: string;
+            link: string;
+            name: string;
+        };
+    };
+}
+
+export interface DriveCreateResponse {
+    success: boolean;
+    fileId: string;
+    fileName: string;
+    link: string;
+}

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { CapstoneManifest } from "@/types";
+import { CapstoneManifest, CapstoneCreateRequest } from "@/types";
 import { OAuth2Client } from "google-auth-library";
+import type { docs_v1 } from "googleapis";
 
 export const runtime = "nodejs";
 
@@ -10,9 +11,10 @@ export const runtime = "nodejs";
 // This route handles the creation of the capstone files in Google Drive, 
 // it creates the files in Google Drive, and returns the links to the files.
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
     try {
-        const { manifest, studentName } = await request.json();
+        const body = await request.json() as CapstoneCreateRequest;
+        const { manifest, studentName } = body;
 
         // Get the user's access token from Authorization header, not service account
         const authHeader = request.headers.get("Authorization");
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
         const { textContent, formattingRequests } = formatManifestAsStructuredContent(typedManifest);
 
         // Combine insert text request with formatting requests
-        const requests: any[] = [
+        const requests: docs_v1.Schema$Request[] = [
             {
                 insertText: {
                     location: { index: 1 },
@@ -122,10 +124,10 @@ export async function POST(request: Request) {
 // Helper function to format manifest with structured content for Google Docs API
 function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
     textContent: string;
-    formattingRequests: any[]
+    formattingRequests: docs_v1.Schema$Request[]
 } {
     const sections: string[] = [];
-    const formattingRequests: any[] = [];
+    const formattingRequests: docs_v1.Schema$Request[] = [];
     let currentIndex = 1; // Start index for document (1-based)
 
     // Helper to add text and track index
