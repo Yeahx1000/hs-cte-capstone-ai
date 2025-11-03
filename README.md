@@ -5,6 +5,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 > [!IMPORTANT] 
 > You will NEED a google account to use this app for now.
 
+## Brief summary of project
+
+The app, named “Capris”, is fashioned as an Ai assistant, that walks an assumed “student” through a short process of creating a capstone template.
+
+### Steps
+
+- Login → Onboarding → Chat  → Review/Generate → Push to Drive
+
 ## Tech Stack
 - Next.js
 - NextAuth
