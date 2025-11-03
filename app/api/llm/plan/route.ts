@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { LLMPlanRequest, LLMPlanResponse, CapstoneManifest } from "@/types";
-import { Manifest } from "@/lib/manifest";
+import { ManifestSchema } from "@/lib/manifest";
 
+// edge runtime (this route only) for reduced latency and improved performance
 export const runtime = "edge";
 
-// OpenAI API client
-// We need to mold the responses from llm better, right now they're... serviceable, but not great.
+/*
+This route is the main entry point for the LLM plan and chat conversation.
+It is responsible for:
+- Generating a manifest based on the conversation
+- Moving to review phase if the student has asked more than 5 questions
+- Returning the manifest to the client
+*/
+
+// ==========================================================
+// Manifest System Prompt (passed to LLM at different stages)
+// ==========================================================
 
 const MANIFEST_SYSTEM_PROMPT = [
     "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
@@ -23,6 +33,7 @@ const MANIFEST_SYSTEM_PROMPT = [
     "If information is missing from the conversation, still include the field structure but with reasonable defaults or empty arrays where appropriate.",
     "Return ONLY valid JSON with this structure:",
     "IMPORTANT: answers should be brief, one sentence length if possible, concise, conversational and on point, don't be too verbose, remember these are for high school students, so keep it simple and easy to understand.",
+    "Be mindful of Turns - you are allowed to ask up to 5 questions before moving to review. If you ask more than 5 questions, you will be moved to review. don't ask more than 5 questions total.",
     JSON.stringify({
         title: "string",
         ctePathway: "string",
@@ -227,19 +238,31 @@ export async function POST(request: Request): Promise<NextResponse> {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: CapstoneManifest;
+            let parsed: unknown;
             try {
-                parsed = JSON.parse(content) as CapstoneManifest;
+                parsed = JSON.parse(content);
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
 
-            // Ensure CTE pathway from onboarding is included if provided
-            if (onboardingData?.ctePathway && (!parsed.ctePathway || parsed.ctePathway !== onboardingData.ctePathway)) {
-                parsed.ctePathway = onboardingData.ctePathway;
+            // Validate with Zod schema
+            let validated: CapstoneManifest;
+            try {
+                validated = ManifestSchema.parse(parsed) as CapstoneManifest;
+            } catch (err) {
+                console.error("Manifest validation failed:", err);
+                return NextResponse.json(
+                    { error: "Invalid manifest format from model", details: err instanceof Error ? err.message : "Validation failed" },
+                    { status: 502 }
+                );
             }
 
-            return NextResponse.json(parsed);
+            // Ensure CTE pathway from onboarding is included if provided
+            if (onboardingData?.ctePathway && (!validated.ctePathway || validated.ctePathway !== onboardingData.ctePathway)) {
+                validated.ctePathway = onboardingData.ctePathway;
+            }
+
+            return NextResponse.json(validated);
         } else {
             // Conversation mode - natural responses with strict turn limits
             const turnsRemaining = MAX_TURNS - currentTurnCount - 1; // -1 because we're about to send a response

@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
-import { Manifest } from "@/lib/manifest";
+import { Manifest, ManifestSchema } from "@/lib/manifest";
 import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanResponse } from "@/types";
 
 // currently using this custom hook initialized before. 
 // Reason? I feel it helps to manage state and logic for the chat component in a more organized way. 
 // I coould be wrong, but it's the choice I'm going with for now.
+
+// This hook manages the chat conversation state and logic.
 
 const MAX_TURNS = 5; // Max num of turns before moving to review, might be too short but whatever for now.
 
@@ -117,11 +119,16 @@ export const useChat = () => {
 
             // If we get a manifest back, store it
             if (data.manifest && data.manifest.title && data.manifest.ctePathway) {
-                setManifest(data.manifest);
-                sessionStorage.setItem("manifest", JSON.stringify(data.manifest));
+                try {
+                    const validated = ManifestSchema.parse(data.manifest);
+                    setManifest(validated);
+                    sessionStorage.setItem("manifest", JSON.stringify(validated));
+                } catch (err) {
+                    console.error("Invalid manifest received:", err);
+                }
             } else if (data.title && data.ctePathway && data.objectives && data.deliverables && data.timeline && data.assessment && data.resources) {
-                // Direct manifest response
-                const manifest: Manifest = {
+                // Direct manifest response - construct and validate
+                const manifestData = {
                     title: data.title,
                     ctePathway: data.ctePathway,
                     objectives: data.objectives,
@@ -130,9 +137,20 @@ export const useChat = () => {
                     assessment: data.assessment,
                     resources: data.resources,
                     ...(data.content && { content: data.content }),
+                    ...(data.projectProposal && { projectProposal: data.projectProposal }),
+                    ...(data.workBasedLearning && { workBasedLearning: data.workBasedLearning }),
+                    ...(data.deliverablesDetail && { deliverablesDetail: data.deliverablesDetail }),
+                    ...(data.publicPresentation && { publicPresentation: data.publicPresentation }),
+                    ...(data.reflectionPostsecondary && { reflectionPostsecondary: data.reflectionPostsecondary }),
+                    ...(data.rubric && { rubric: data.rubric }),
                 };
-                setManifest(manifest);
-                sessionStorage.setItem("manifest", JSON.stringify(manifest));
+                try {
+                    const validated = ManifestSchema.parse(manifestData);
+                    setManifest(validated);
+                    sessionStorage.setItem("manifest", JSON.stringify(validated));
+                } catch (err) {
+                    console.error("Invalid manifest constructed:", err);
+                }
             }
 
             // Add assistant response to messages
@@ -183,15 +201,38 @@ export const useChat = () => {
 
             const data = await response.json() as LLMPlanResponse;
 
+            // Construct manifest from response data
+            const manifestData = {
+                title: data.title || "",
+                ctePathway: data.ctePathway || "",
+                objectives: data.objectives || [],
+                deliverables: data.deliverables || [],
+                timeline: data.timeline || [],
+                assessment: data.assessment || [],
+                resources: data.resources || [],
+                ...(data.content && { content: data.content }),
+                ...(data.projectProposal && { projectProposal: data.projectProposal }),
+                ...(data.workBasedLearning && { workBasedLearning: data.workBasedLearning }),
+                ...(data.deliverablesDetail && { deliverablesDetail: data.deliverablesDetail }),
+                ...(data.publicPresentation && { publicPresentation: data.publicPresentation }),
+                ...(data.reflectionPostsecondary && { reflectionPostsecondary: data.reflectionPostsecondary }),
+                ...(data.rubric && { rubric: data.rubric }),
+            };
+
             // Ensure CTE pathway from onboarding is included if not in generated manifest
-            const manifest: Manifest = data as Manifest;
-            if (onboardingData?.ctePathway && (!manifest.ctePathway || manifest.ctePathway !== onboardingData.ctePathway)) {
-                manifest.ctePathway = onboardingData.ctePathway;
+            if (onboardingData?.ctePathway && (!manifestData.ctePathway || manifestData.ctePathway !== onboardingData.ctePathway)) {
+                manifestData.ctePathway = onboardingData.ctePathway;
             }
 
-            setManifest(manifest);
-            sessionStorage.setItem("manifest", JSON.stringify(manifest));
-            return manifest;
+            try {
+                const validated = ManifestSchema.parse(manifestData);
+                setManifest(validated);
+                sessionStorage.setItem("manifest", JSON.stringify(validated));
+                return validated;
+            } catch (err) {
+                console.error("Invalid manifest generated:", err);
+                throw new Error("Generated manifest failed validation");
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
             return null;

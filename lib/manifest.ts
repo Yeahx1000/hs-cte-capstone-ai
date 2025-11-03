@@ -20,6 +20,51 @@ export const CapstoneContentSchema = z.object({
     ),
 });
 
+// CA Capstone Framework extension schemas
+export const ProjectProposalSchema = z.object({
+    problemOpportunity: z.string().optional(),
+    industryContext: z.string().optional(),
+    endUser: z.string().optional(),
+    successCriteria: z.array(z.string()).optional(),
+    mentor: z.string().optional(),
+}).optional();
+
+export const WorkBasedLearningSchema = z.object({
+    activityType: z.enum(["professional-interview", "job-shadow", "internship", "youth-apprenticeship", "on-the-job-training", "other"]).optional(),
+    hours: z.number().optional(),
+    description: z.string().optional(),
+    artifacts: z.array(z.string()).optional(),
+}).optional();
+
+export const DeliverablesDetailSchema = z.object({
+    technicalProduct: z.string().optional(),
+    processEvidence: z.array(z.string()).optional(),
+    industryFeedback: z.string().optional(),
+    standardsMap: z.array(z.string()).optional(),
+}).optional();
+
+export const PublicPresentationSchema = z.object({
+    duration: z.string().optional(),
+    panelMembers: z.array(z.string()).optional(),
+    rubricCriteria: z.array(z.string()).optional(),
+}).optional();
+
+export const ReflectionPostsecondarySchema = z.object({
+    reflection: z.string().optional(),
+    coursework: z.array(z.string()).optional(),
+    training: z.array(z.string()).optional(),
+    credentials: z.array(z.string()).optional(),
+    apprenticeship: z.array(z.string()).optional(),
+    collegeMajor: z.array(z.string()).optional(),
+}).optional();
+
+export const CapstoneRubricSchema = z.object({
+    technicalQuality: z.array(z.string()).optional(),
+    workBasedIntegration: z.array(z.string()).optional(),
+    communicationProfessionalism: z.array(z.string()).optional(),
+    reflectionNextSteps: z.array(z.string()).optional(),
+}).optional();
+
 export const ManifestSchema = z.object({
     title: z.string(),
     ctePathway: z.string(),
@@ -29,6 +74,13 @@ export const ManifestSchema = z.object({
     assessment: z.array(z.string()),
     resources: z.array(z.string()),
     content: CapstoneContentSchema.optional(),
+    // CA Framework extensions (optional for backward compatibility)
+    projectProposal: ProjectProposalSchema,
+    workBasedLearning: WorkBasedLearningSchema,
+    deliverablesDetail: DeliverablesDetailSchema,
+    publicPresentation: PublicPresentationSchema,
+    reflectionPostsecondary: ReflectionPostsecondarySchema,
+    rubric: CapstoneRubricSchema,
 });
 
 export type Manifest = z.infer<typeof ManifestSchema>;

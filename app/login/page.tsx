@@ -26,7 +26,7 @@ export default function LoginPage() {
 
                         <button
                             onClick={() => signIn("google", { callbackUrl: "/" })}
-                            className="w-full px-4 py-3 bg-white dark:bg-[#1A1A1A] border border-gray-300 dark:border-gray-700 rounded-xl font-medium text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] active:bg-gray-100 dark:active:bg-[#333333] transition-all flex items-center justify-center gap-3"
+                            className="cursor-pointer w-full px-4 py-3 bg-white dark:bg-[#1A1A1A] border border-gray-300 dark:border-gray-700 rounded-xl font-medium text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#2A2A2A] active:bg-gray-100 dark:active:bg-[#333333] transition-all flex items-center justify-center gap-3"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path

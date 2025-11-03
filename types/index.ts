@@ -131,13 +131,6 @@ export interface CapstoneCreateRequest {
     studentName?: string;
 }
 
-export interface DriveCreateRequest {
-    fileName: string;
-    fileContent: string;
-    mimeType?: string;
-    folderId?: string;
-}
-
 // API Response Types
 export interface LLMPlanResponse {
     response?: string;
@@ -173,11 +166,4 @@ export interface CapstoneCreateResponse {
             name: string;
         };
     };
-}
-
-export interface DriveCreateResponse {
-    success: boolean;
-    fileId: string;
-    fileName: string;
-    link: string;
 }

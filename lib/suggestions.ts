@@ -4,7 +4,8 @@ import { ConversationPhase } from "@/types";
  * Get fallback suggestion chips based on conversation phase and context
  */
 
-// These are super basic suggestions for now just for an MVP to show something.
+// These are SUPER BASIC (and admittedly awkwardly placed) suggestions for now just for an MVP to show something. 
+// not really useful but for now it's a placeholder.
 
 export function getFallbackSuggestions(
     phase: ConversationPhase,

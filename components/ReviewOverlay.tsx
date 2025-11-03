@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { Manifest } from "@/lib/manifest";
 import { CapstoneCreateResponse, OnboardingData } from "@/types";
 
+// This is the review overlay component. was formerlly it's own page, but changed for (possibly better?) UX..?
+
 interface ReviewOverlayProps {
     manifest: Manifest;
     isOpen: boolean;
@@ -123,7 +125,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
-                onClick={onClose}
+            // onClick={onClose} // disabled for now to prevent accidental closing
             />
 
             {/* Overlay Content */}
@@ -142,25 +144,6 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                 Review and make any final edits before creating in Google Drive
                             </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-[#FAFCFB] dark:hover:bg-[#2A2A2A] rounded-lg transition-colors"
-                            aria-label="Close"
-                        >
-                            <svg
-                                className="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
                     </div>
 
                     {/* Scrollable Content */}
@@ -380,7 +363,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                     {/* Backdrop */}
                     <div
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowSuccessModal(false)}
+                    // onClick={() => setShowSuccessModal(false)} // disabled for now to prevent accidental closing
                     />
 
                     {/* Modal */}

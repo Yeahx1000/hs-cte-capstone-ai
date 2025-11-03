@@ -3,13 +3,19 @@ import { google } from "googleapis";
 import { CapstoneManifest, CapstoneCreateRequest } from "@/types";
 import { OAuth2Client } from "google-auth-library";
 import type { docs_v1 } from "googleapis";
+import { ManifestSchema } from "@/lib/manifest";
 
 export const runtime = "nodejs";
 
-// Capstone creation route
+// IMPORTANT!!!: formerly this project had a route /drive/create/route.ts, but I moved it here for consolidation and organization.
 
 // This route handles the creation of the capstone files in Google Drive, 
-// it creates the files in Google Drive, and returns the links to the files.
+// It formats the data from manifest as a structured template for the Google Docs API.
+// two main parts -> 1. POST request to creat file in drive -> 2. Data Formatting helper function
+
+// ==================================================
+// Main function (creates the files in Google Drive)
+// ==================================================
 
 export async function POST(request: Request): Promise<NextResponse> {
     try {
@@ -27,14 +33,23 @@ export async function POST(request: Request): Promise<NextResponse> {
             );
         }
 
-        if (!manifest || !manifest.title) {
+        if (!manifest) {
             return NextResponse.json(
-                { error: "Manifest with title is required" },
+                { error: "Manifest is required" },
                 { status: 400 }
             );
         }
 
-        const typedManifest = manifest as CapstoneManifest;
+        // Validate manifest with Zod schema
+        let typedManifest: CapstoneManifest;
+        try {
+            typedManifest = ManifestSchema.parse(manifest) as CapstoneManifest;
+        } catch (err) {
+            return NextResponse.json(
+                { error: "Invalid manifest format", details: err instanceof Error ? err.message : "Validation failed" },
+                { status: 400 }
+            );
+        }
         const folderName = `CTE Capstone Template – ${studentName || "Student"} - ${typedManifest.ctePathway || "No Pathway Specified"}`;
 
         // Initialize Google Auth using USER'S token (not service account)
@@ -120,6 +135,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         );
     }
 }
+
+
+
+
+
+// ===========================================
+// Helper functions (formatting the document)
+// ===========================================
 
 // Helper function to format manifest with structured content for Google Docs API
 function formatManifestAsStructuredContent(manifest: CapstoneManifest): {

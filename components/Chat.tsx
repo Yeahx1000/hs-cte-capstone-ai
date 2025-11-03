@@ -5,6 +5,8 @@ import SuggestionChips from "@/components/SuggestionChips";
 import { ChatProps, ConversationState } from "@/types";
 import { getFallbackSuggestions } from "@/lib/suggestions";
 
+// This is the main chat interface layout.
+
 interface ChatWithStateProps extends ChatProps {
     conversationState?: ConversationState;
     onReviewClick?: () => void;

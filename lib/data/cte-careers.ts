@@ -1,4 +1,4 @@
-// array of CTE careers, may use during chat prompt, or for suggestion cards. Also may change data type later.
+// array of CTE careers, used at onboarding and for llm context.
 
 export const cteCareers = [
     { id: "health-science", label: "Health Science", value: "Health Science" },

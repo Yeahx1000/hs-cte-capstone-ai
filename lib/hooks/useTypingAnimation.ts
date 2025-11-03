@@ -8,6 +8,9 @@ import { useState, useEffect, useRef } from "react";
  * @param onceOnly - If true, animation only runs once and subsequent text changes show immediately (default: false)
  * @returns The animated text with a blinking cursor
  */
+
+// This hook is solely a stylistic choice, not necessary for the project.
+
 export const useTypingAnimation = (
     text: string,
     speed: number = 20,

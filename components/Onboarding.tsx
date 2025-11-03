@@ -58,7 +58,6 @@ export default function Onboarding({ user }: OnboardingProps) {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8 relative z-10">
         <div className="w-full max-w-2xl flex flex-col items-center">
           <h1 className="text-6xl font-light text-gray-900 dark:text-white mb-4 text-center tracking-tight">
@@ -68,7 +67,6 @@ export default function Onboarding({ user }: OnboardingProps) {
             Helping you plan your CTE Capstone Project.
           </p>
 
-          {/* Form */}
           <div className="w-full space-y-4">
             <div>
               <input

@@ -5,7 +5,7 @@ import Chat from "@/components/Chat";
 import UserMenu from "@/components/UserMenu";
 import ReviewOverlay from "@/components/ReviewOverlay";
 import { useChat } from "@/lib/hooks/useChat";
-import { Manifest } from "@/lib/manifest";
+import { Manifest, ManifestSchema } from "@/lib/manifest";
 import { OnboardingData } from "@/types";
 
 export default function ChatPage() {
@@ -36,7 +36,7 @@ export default function ChatPage() {
         }
     }, [manifest]);
 
-    // Prefetch manifest data when review button is about to appear
+    // Prefetch manifest data when review button is about to appear (attempting to reduce latency)
     useEffect(() => {
         // Start generating manifest in background when we have enough data
         if (conversationState?.phase === "review" && !manifest && !manifestGenerating && !loading && messages.length >= 4) {
@@ -66,16 +66,17 @@ export default function ChatPage() {
 
                 if (storedManifest) {
                     try {
-                        const parsed = JSON.parse(storedManifest) as Manifest;
+                        const parsed = JSON.parse(storedManifest);
+                        const validated = ManifestSchema.parse(parsed);
                         // Use existing manifest if it's valid and we're not forced to regenerate
-                        if (parsed && parsed.title && parsed.ctePathway) {
+                        if (validated && validated.title && validated.ctePathway) {
                             // If there's already a valid manifest, use it
                             // But still ensure CTE pathway matches onboarding
-                            if (onboardingData?.ctePathway && parsed.ctePathway !== onboardingData.ctePathway) {
-                                parsed.ctePathway = onboardingData.ctePathway;
-                                sessionStorage.setItem("manifest", JSON.stringify(parsed));
+                            if (onboardingData?.ctePathway && validated.ctePathway !== onboardingData.ctePathway) {
+                                validated.ctePathway = onboardingData.ctePathway;
+                                sessionStorage.setItem("manifest", JSON.stringify(validated));
                             }
-                            setCurrentManifest(parsed);
+                            setCurrentManifest(validated);
                             shouldGenerate = false;
                         }
                     } catch {
@@ -106,9 +107,10 @@ export default function ChatPage() {
             const storedManifest = sessionStorage.getItem("manifest");
             if (storedManifest) {
                 try {
-                    const parsed = JSON.parse(storedManifest) as Manifest;
-                    if (parsed && parsed.title && parsed.ctePathway) {
-                        setCurrentManifest(parsed);
+                    const parsed = JSON.parse(storedManifest);
+                    const validated = ManifestSchema.parse(parsed);
+                    if (validated && validated.title && validated.ctePathway) {
+                        setCurrentManifest(validated);
                         setIsReviewOpen(true);
                         return;
                     }
@@ -132,14 +134,11 @@ export default function ChatPage() {
     return (
         <>
             <div className="flex flex-col h-screen bg-white dark:bg-[#1A1A1A] overflow-hidden">
-                {/* Header */}
                 <div className="w-full px-6 py-4 shrink-0">
                     <div className="flex justify-end max-w-7xl mx-auto">
                         <UserMenu user={session.user} />
                     </div>
                 </div>
-
-                {/* Main Content */}
                 <div className="flex-1 flex items-start justify-center max-w-7xl mx-auto w-full px-6 pb-8 gap-8 overflow-hidden min-h-0">
                     <div className="flex-1 max-w-2xl h-full flex flex-col min-h-0">
                         <div className="flex-1 min-h-0 flex flex-col">
@@ -161,8 +160,6 @@ export default function ChatPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Review Overlay */}
             {currentManifest && (
                 <ReviewOverlay
                     manifest={currentManifest}

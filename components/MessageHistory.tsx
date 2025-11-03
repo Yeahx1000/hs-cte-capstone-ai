@@ -22,7 +22,7 @@ function MessageHistory({ messages, loading }: MessageHistoryProps) {
                 // Invalid onboarding data, use default message
             }
         }
-    }, []);
+    }, []); // runs on mount only
 
     // Typing animation for the initial message
     const animatedInitialMessage = useTypingAnimation(initialMessage, 20, messages.length === 0);
