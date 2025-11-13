@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { Manifest } from "@/lib/manifest";
+import { CapstonePlanData } from "@/lib/capstonePlanData";
 import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanResponse } from "@/types";
 
 // currently using this custom hook initialized before. 
@@ -13,9 +13,9 @@ import { Message, ConversationPhase, ConversationState, OnboardingData, LLMPlanR
 export const useChat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
-    const [manifestGenerating, setManifestGenerating] = useState(false);
+    const [capstonePlanDataGenerating, setCapstonePlanDataGenerating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [manifest, setManifest] = useState<Manifest | null>(null);
+    const [capstonePlanData, setCapstonePlanData] = useState<CapstonePlanData | null>(null);
     const [conversationState, setConversationState] = useState<ConversationState>({
         turnCount: 0,
         phase: "brainstorm",
@@ -117,13 +117,13 @@ export const useChat = () => {
                 phase: newPhase,
             }));
 
-            // If we get a manifest back, store it
-            if (data.manifest && data.manifest.title && data.manifest.ctePathway) {
-                setManifest(data.manifest as Manifest);
-                sessionStorage.setItem("manifest", JSON.stringify(data.manifest));
+            // If we get a capstone plan data back, store it
+            if (data.capstonePlanData && data.capstonePlanData.title && data.capstonePlanData.ctePathway) {
+                setCapstonePlanData(data.capstonePlanData as CapstonePlanData);
+                sessionStorage.setItem("capstonePlanData", JSON.stringify(data.capstonePlanData));
             } else if (data.title && data.ctePathway && data.objectives && data.deliverables && data.timeline && data.assessment && data.resources) {
-                // Direct manifest response - construct manifest
-                const manifestData = {
+                // Direct capstone plan data response - construct capstone plan data
+                const planData = {
                     title: data.title,
                     ctePathway: data.ctePathway,
                     objectives: data.objectives,
@@ -139,8 +139,8 @@ export const useChat = () => {
                     ...(data.reflectionPostsecondary && { reflectionPostsecondary: data.reflectionPostsecondary }),
                     ...(data.rubric && { rubric: data.rubric }),
                 };
-                setManifest(manifestData as Manifest);
-                sessionStorage.setItem("manifest", JSON.stringify(manifestData));
+                setCapstonePlanData(planData as CapstonePlanData);
+                sessionStorage.setItem("capstonePlanData", JSON.stringify(planData));
             }
 
             // Add assistant response to messages
@@ -158,8 +158,8 @@ export const useChat = () => {
         }
     }, [messages, conversationState]);
 
-    const generateManifest = useCallback(async (onboardingData?: OnboardingData): Promise<Manifest | null> => {
-        setManifestGenerating(true);
+    const generateCapstonePlanData = useCallback(async (onboardingData?: OnboardingData): Promise<CapstonePlanData | null> => {
+        setCapstonePlanDataGenerating(true);
         setError(null);
 
         try {
@@ -168,31 +168,31 @@ export const useChat = () => {
                 .map((m) => `${m.role}: ${m.content}`)
                 .join("\n");
 
-            // Include onboarding data, especially CTE pathway, in the manifest generation
-            let manifestPrompt = `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}`;
+            // Include onboarding data, especially CTE pathway, in the capstone plan data generation
+            let planPrompt = `Generate a complete capstone project plan data based on this conversation:\n\n${conversationSummary}`;
 
             if (onboardingData?.ctePathway) {
-                manifestPrompt = `The student has selected the CTE pathway: ${onboardingData.ctePathway}. ${manifestPrompt}`;
+                planPrompt = `The student has selected the CTE pathway: ${onboardingData.ctePathway}. ${planPrompt}`;
             }
 
             const response = await fetch("/api/llm/plan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    message: manifestPrompt,
+                    message: planPrompt,
                     generateManifest: true,
                     onboardingData,
                 }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to generate manifest");
+                throw new Error("Failed to generate capstone plan data");
             }
 
             const data = await response.json() as LLMPlanResponse;
 
-            // Construct manifest from response data
-            const manifestData = {
+            // Construct capstone plan data from response data
+            const planData = {
                 title: data.title || "",
                 ctePathway: data.ctePathway || "",
                 objectives: data.objectives || [],
@@ -209,31 +209,31 @@ export const useChat = () => {
                 ...(data.rubric && { rubric: data.rubric }),
             };
 
-            // Ensure CTE pathway from onboarding is included if not in generated manifest
-            if (onboardingData?.ctePathway && (!manifestData.ctePathway || manifestData.ctePathway !== onboardingData.ctePathway)) {
-                manifestData.ctePathway = onboardingData.ctePathway;
+            // Ensure CTE pathway from onboarding is included if not in generated plan data
+            if (onboardingData?.ctePathway && (!planData.ctePathway || planData.ctePathway !== onboardingData.ctePathway)) {
+                planData.ctePathway = onboardingData.ctePathway;
             }
 
-            // Use manifest data directly without strict validation
-            setManifest(manifestData as Manifest);
-            sessionStorage.setItem("manifest", JSON.stringify(manifestData));
-            return manifestData as Manifest;
+            // Use plan data directly without strict validation
+            setCapstonePlanData(planData as CapstonePlanData);
+            sessionStorage.setItem("capstonePlanData", JSON.stringify(planData));
+            return planData as CapstonePlanData;
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred");
             return null;
         } finally {
-            setManifestGenerating(false);
+            setCapstonePlanDataGenerating(false);
         }
     }, [messages]);
 
     return {
         messages,
         loading,
-        manifestGenerating,
+        capstonePlanDataGenerating,
         error,
-        manifest,
+        capstonePlanData,
         sendMessage,
-        generateManifest,
+        generateCapstonePlanData,
         conversationState,
     };
 };

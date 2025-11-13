@@ -11,10 +11,10 @@ interface ChatWithStateProps extends ChatProps {
     conversationState?: ConversationState;
     onReviewClick?: () => void;
     reviewLoading?: boolean;
-    manifestGenerating?: boolean;
+    capstonePlanDataGenerating?: boolean;
 }
 
-function Chat({ messages, loading, onSendMessage, conversationState, onReviewClick, reviewLoading, manifestGenerating }: ChatWithStateProps) {
+function Chat({ messages, loading, onSendMessage, conversationState, onReviewClick, reviewLoading, capstonePlanDataGenerating }: ChatWithStateProps) {
     const isInputDisabled = loading ||
         conversationState?.phase === "review" ||
         conversationState?.phase === "complete";
@@ -43,11 +43,11 @@ function Chat({ messages, loading, onSendMessage, conversationState, onReviewCli
                         </p>
                         <button
                             onClick={onReviewClick}
-                            disabled={reviewLoading || manifestGenerating}
+                            disabled={reviewLoading || capstonePlanDataGenerating}
                             className="cursor-pointer w-full px-6 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200 active:bg-gray-950 dark:active:bg-gray-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {/* animation for generating plan text */}
-                            {reviewLoading || manifestGenerating ? (
+                            {reviewLoading || capstonePlanDataGenerating ? (
                                 <span className="inline-flex items-center justify-center">
                                     {"Generating Plan...".split("").map((char, idx) => (
                                         <span

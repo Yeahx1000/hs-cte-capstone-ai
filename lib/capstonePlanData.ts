@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // I'm using Zod for data validation. 
-// Reason? Typescript first approach, this is the schema for the manifest
+// Reason? Typescript first approach, this is the schema for the capstone plan data
 
 export const TimelinePhaseSchema = z.object({
     phase: z.string(),
@@ -65,7 +65,7 @@ export const CapstoneRubricSchema = z.object({
     reflectionNextSteps: z.array(z.string()).optional(),
 }).optional();
 
-export const ManifestSchema = z.object({
+export const CapstonePlanDataSchema = z.object({
     title: z.string(),
     ctePathway: z.string(),
     objectives: z.array(z.string()),
@@ -83,7 +83,7 @@ export const ManifestSchema = z.object({
     rubric: CapstoneRubricSchema,
 });
 
-export type Manifest = z.infer<typeof ManifestSchema>;
+export type CapstonePlanData = z.infer<typeof CapstonePlanDataSchema>;
 export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
 export type CapstoneContent = z.infer<typeof CapstoneContentSchema>;
 

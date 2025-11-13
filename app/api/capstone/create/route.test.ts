@@ -27,14 +27,14 @@ vi.mock("google-auth-library", () => ({
 describe("POST /api/capstone/create", () => {
     it("requires Authorization header", async () => {
         const req = {
-            json: async () => ({ manifest: { title: "Test", ctePathway: "IT", objectives: [], deliverables: [], timeline: [], assessment: [], resources: [], content: { docText: "", csvData: [], slideOutline: [] } } }),
+            json: async () => ({ capstonePlanData: { title: "Test", ctePathway: "IT", objectives: [], deliverables: [], timeline: [], assessment: [], resources: [], content: { docText: "", csvData: [], slideOutline: [] } } }),
             headers: { get: () => null }
         } as unknown as Request;
         const res = await POST(req);
         expect(res.status).toBe(401);
     });
 
-    it("validates manifest with title", async () => {
+    it("validates capstone plan data with title", async () => {
         const req = {
             json: async () => ({}),
             headers: { get: () => "Bearer token" }

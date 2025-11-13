@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { Session } from "next-auth";
-import { Manifest } from "@/lib/manifest";
+import { CapstonePlanData } from "@/lib/capstonePlanData";
 import { CapstoneCreateResponse, OnboardingData } from "@/types";
 
 interface ExtendedSession extends Session {
@@ -13,10 +13,10 @@ interface ExtendedSession extends Session {
 // This is the review overlay component. was formerlly it's own page, but changed for (possibly better?) UX..?
 
 interface ReviewOverlayProps {
-    manifest: Manifest;
+    capstonePlanData: CapstonePlanData;
     isOpen: boolean;
     onClose: () => void;
-    onManifestUpdate?: (manifest: Manifest) => void;
+    onCapstonePlanDataUpdate?: (capstonePlanData: CapstonePlanData) => void;
 }
 
 interface SuccessModalData {
@@ -24,20 +24,20 @@ interface SuccessModalData {
     docLink: string;
 }
 
-export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClose: _onClose, onManifestUpdate }: ReviewOverlayProps) {
+export default function ReviewOverlay({ capstonePlanData: initialCapstonePlanData, isOpen, onClose: _onClose, onCapstonePlanDataUpdate }: ReviewOverlayProps) {
     const router = useRouter();
     const { data: session } = useSession();
-    const [manifest, setManifest] = useState<Manifest>(initialManifest);
+    const [capstonePlanData, setCapstonePlanData] = useState<CapstonePlanData>(initialCapstonePlanData);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [studentName, setStudentName] = useState<string>("Student");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successData, setSuccessData] = useState<SuccessModalData | null>(null);
 
-    // Update manifest when initialManifest changes
+    // Update capstone plan data when initialCapstonePlanData changes
     useEffect(() => {
-        setManifest(initialManifest);
-    }, [initialManifest]);
+        setCapstonePlanData(initialCapstonePlanData);
+    }, [initialCapstonePlanData]);
 
     // Get student name from onboarding data
     useEffect(() => {
@@ -66,29 +66,29 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
         };
     }, [isOpen]);
 
-    const handleEdit = <K extends keyof Manifest>(field: K, value: Manifest[K]): void => {
-        if (!manifest) return;
-        const updated = { ...manifest, [field]: value };
-        setManifest(updated);
-        onManifestUpdate?.(updated);
+    const handleEdit = <K extends keyof CapstonePlanData>(field: K, value: CapstonePlanData[K]): void => {
+        if (!capstonePlanData) return;
+        const updated = { ...capstonePlanData, [field]: value };
+        setCapstonePlanData(updated);
+        onCapstonePlanDataUpdate?.(updated);
     };
 
     const handleSave = () => {
-        if (!manifest) return;
-        sessionStorage.setItem("manifest", JSON.stringify(manifest));
-        onManifestUpdate?.(manifest);
+        if (!capstonePlanData) return;
+        sessionStorage.setItem("capstonePlanData", JSON.stringify(capstonePlanData));
+        onCapstonePlanDataUpdate?.(capstonePlanData);
     };
 
     const handleCreateInDrive = async (): Promise<void> => {
-        if (!manifest || !session?.user) return;
+        if (!capstonePlanData || !session?.user) return;
 
         setLoading(true);
         setError(null);
 
         try {
-            // Save manifest first
-            sessionStorage.setItem("manifest", JSON.stringify(manifest));
-            onManifestUpdate?.(manifest);
+            // Save capstone plan data first
+            sessionStorage.setItem("capstonePlanData", JSON.stringify(capstonePlanData));
+            onCapstonePlanDataUpdate?.(capstonePlanData);
 
             // Create capstone files in Google Drive
             const response = await fetch("/api/capstone/create", {
@@ -98,7 +98,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                     "Authorization": `Bearer ${(session as ExtendedSession)?.accessToken ?? ""}`,
                 },
                 body: JSON.stringify({
-                    manifest,
+                    capstonePlanData,
                     studentName: studentName,
                 }),
             });
@@ -162,7 +162,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                 <div className="relative">
                                     <input
                                         type="text"
-                                        value={manifest.title}
+                                        value={capstonePlanData.title}
                                         onChange={(e) => handleEdit("title", e.target.value)}
                                         className="w-full px-4 py-3 pr-20 text-lg font-light border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                         placeholder="Enter project title"
@@ -185,7 +185,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            value={manifest.ctePathway}
+                                            value={capstonePlanData.ctePathway}
                                             onChange={(e) => handleEdit("ctePathway", e.target.value)}
                                             className="w-full px-4 py-3 pr-20 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#C8D9CE] dark:focus:border-[#3A453C] focus:ring-1 focus:ring-[#D9E5DD] dark:focus:ring-[#2A352C] transition-all"
                                             placeholder="Enter CTE pathway"
@@ -206,14 +206,14 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                     OBJECTIVES
                                 </h2>
                                 <div className="space-y-3">
-                                    {manifest.objectives.map((obj, idx) => (
+                                    {capstonePlanData.objectives.map((obj, idx) => (
                                         <div key={idx} className="relative flex items-center gap-3">
                                             <span className="text-gray-600 dark:text-gray-400 text-lg">•</span>
                                             <input
                                                 type="text"
                                                 value={obj}
                                                 onChange={(e) => {
-                                                    const newObjectives = [...manifest.objectives];
+                                                    const newObjectives = [...capstonePlanData.objectives];
                                                     newObjectives[idx] = e.target.value;
                                                     handleEdit("objectives", newObjectives);
                                                 }}
@@ -234,14 +234,14 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                     DELIVERABLES (Product + Process Bundle)
                                 </h2>
                                 <div className="space-y-3">
-                                    {manifest.deliverables.map((del, idx) => (
+                                    {capstonePlanData.deliverables.map((del, idx) => (
                                         <div key={idx} className="relative flex items-center gap-3">
                                             <span className="text-gray-600 dark:text-gray-400 text-lg">•</span>
                                             <input
                                                 type="text"
                                                 value={del}
                                                 onChange={(e) => {
-                                                    const newDeliverables = [...manifest.deliverables];
+                                                    const newDeliverables = [...capstonePlanData.deliverables];
                                                     newDeliverables[idx] = e.target.value;
                                                     handleEdit("deliverables", newDeliverables);
                                                 }}
@@ -262,7 +262,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                     TIMELINE
                                 </h2>
                                 <div className="space-y-6">
-                                    {manifest.timeline.map((phase, phaseIdx) => (
+                                    {capstonePlanData.timeline.map((phase, phaseIdx) => (
                                         <div key={phaseIdx} className="border border-[#E0E8E3] dark:border-[#2F3A30] rounded-2xl p-5 bg-white dark:bg-[#1A1A1A]">
                                             <div className="flex items-center gap-4 mb-4">
                                                 <div className="flex-1 relative">
@@ -273,7 +273,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                         type="text"
                                                         value={phase.phase}
                                                         onChange={(e) => {
-                                                            const newTimeline = [...manifest.timeline];
+                                                            const newTimeline = [...capstonePlanData.timeline];
                                                             newTimeline[phaseIdx] = { ...phase, phase: e.target.value };
                                                             handleEdit("timeline", newTimeline);
                                                         }}
@@ -291,7 +291,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                             min="0"
                                                             value={phase.weeks}
                                                             onChange={(e) => {
-                                                                const newTimeline = [...manifest.timeline];
+                                                                const newTimeline = [...capstonePlanData.timeline];
                                                                 newTimeline[phaseIdx] = { ...phase, weeks: parseInt(e.target.value) || 0 };
                                                                 handleEdit("timeline", newTimeline);
                                                             }}
@@ -315,7 +315,7 @@ export default function ReviewOverlay({ manifest: initialManifest, isOpen, onClo
                                                             type="text"
                                                             value={task}
                                                             onChange={(e) => {
-                                                                const newTimeline = [...manifest.timeline];
+                                                                const newTimeline = [...capstonePlanData.timeline];
                                                                 const newTasks = [...phase.tasks];
                                                                 newTasks[taskIdx] = e.target.value;
                                                                 newTimeline[phaseIdx] = { ...phase, tasks: newTasks };

@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { CapstoneManifest, CapstoneCreateRequest } from "@/types";
+import { CapstonePlanData, CapstoneCreateRequest } from "@/types";
 import { OAuth2Client } from "google-auth-library";
 import type { docs_v1 } from "googleapis";
-import { ManifestSchema } from "@/lib/manifest";
+import { CapstonePlanDataSchema } from "@/lib/capstonePlanData";
 
 export const runtime = "nodejs";
 
 // IMPORTANT!!!: formerly this project had a route /drive/create/route.ts, but I moved it here for consolidation and organization.
 
 // This route handles the creation of the capstone files in Google Drive, 
-// It formats the data from manifest as a structured template for the Google Docs API.
+// It formats the data from capstone plan data as a structured template for the Google Docs API.
 // two main parts -> 1. POST request to creat file in drive -> 2. Data Formatting helper function
 
 // ==================================================
@@ -20,7 +20,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request): Promise<NextResponse> {
     try {
         const body = await request.json() as CapstoneCreateRequest;
-        const { manifest, studentName } = body;
+        const { capstonePlanData, studentName } = body;
 
         // Get the user's access token from Authorization header, not service account
         const authHeader = request.headers.get("Authorization");
@@ -33,24 +33,24 @@ export async function POST(request: Request): Promise<NextResponse> {
             );
         }
 
-        if (!manifest) {
+        if (!capstonePlanData) {
             return NextResponse.json(
-                { error: "Manifest is required" },
+                { error: "Capstone plan data is required" },
                 { status: 400 }
             );
         }
 
-        // Validate manifest with Zod schema
-        let typedManifest: CapstoneManifest;
+        // Validate capstone plan data with Zod schema
+        let typedPlanData: CapstonePlanData;
         try {
-            typedManifest = ManifestSchema.parse(manifest) as CapstoneManifest;
+            typedPlanData = CapstonePlanDataSchema.parse(capstonePlanData) as CapstonePlanData;
         } catch (err) {
             return NextResponse.json(
-                { error: "Invalid manifest format", details: err instanceof Error ? err.message : "Validation failed" },
+                { error: "Invalid capstone plan data format", details: err instanceof Error ? err.message : "Validation failed" },
                 { status: 400 }
             );
         }
-        const folderName = `CTE Capstone Template – ${studentName || "Student"} - ${typedManifest.ctePathway || "No Pathway Specified"}`;
+        const folderName = `CTE Capstone Template – ${studentName || "Student"} - ${typedPlanData.ctePathway || "No Pathway Specified"}`;
 
         // Initialize Google Auth using USER'S token (not service account)
         const auth = new OAuth2Client();
@@ -78,7 +78,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Step 2: Create Google Doc using Drive API (works for service accounts, avoid capstone creation fail issue)
         const docResponse = await drive.files.create({
             requestBody: {
-                name: `${typedManifest.title} - Project Plan`,
+                name: `${typedPlanData.title} - Project Plan`,
                 mimeType: "application/vnd.google-apps.document",
                 parents: [folderId], // Create directly in folder
             },
@@ -91,8 +91,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
 
         // Insert text content using batchUpdate
-        // Always generate full template from manifest data to ensure all user input is included
-        const { textContent, formattingRequests } = formatManifestAsStructuredContent(typedManifest);
+        // Always generate full template from capstone plan data to ensure all user input is included
+        const { textContent, formattingRequests } = formatCapstonePlanDataAsStructuredContent(typedPlanData);
 
         // Combine insert text request with formatting requests
         const requests: docs_v1.Schema$Request[] = [
@@ -116,7 +116,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         results.doc = {
             id: docId,
             link: docResponse.data.webViewLink || `https://docs.google.com/document/d/${docId}/edit`,
-            name: `${typedManifest.title} - Project Plan`,
+            name: `${typedPlanData.title} - Project Plan`,
         };
 
         return NextResponse.json({
@@ -144,8 +144,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 // Helper functions (formatting the document)
 // ===========================================
 
-// Helper function to format manifest with structured content for Google Docs API
-function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
+// Helper function to format capstone plan data with structured content for Google Docs API
+function formatCapstonePlanDataAsStructuredContent(planData: CapstonePlanData): {
     textContent: string;
     formattingRequests: docs_v1.Schema$Request[]
 } {
@@ -167,7 +167,7 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
     };
 
     // Title - will be formatted as large, bold heading
-    const titleRange = addLine(manifest.title);
+    const titleRange = addLine(planData.title);
     formattingRequests.push({
         updateTextStyle: {
             range: {
@@ -211,30 +211,30 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // CTE Pathway Alignment
     addSectionHeader("PATHWAY ALIGNMENT");
-    addLine(`CTE Pathway: ${manifest.ctePathway || "Not specified"}`);
+    addLine(`CTE Pathway: ${planData.ctePathway || "Not specified"}`);
     addLine("Note: This capstone is the final course in a 2-3 course CTE sequence. A grade of C- or better marks a CTE Pathway Completer.");
     addLine("");
 
     // Project Proposal
     addSectionHeader("PROJECT PROPOSAL (Teacher-Approved)");
-    if (manifest.projectProposal) {
-        if (manifest.projectProposal.problemOpportunity) {
-            addLine(`Problem/Opportunity: ${manifest.projectProposal.problemOpportunity}`);
+    if (planData.projectProposal) {
+        if (planData.projectProposal.problemOpportunity) {
+            addLine(`Problem/Opportunity: ${planData.projectProposal.problemOpportunity}`);
         }
-        if (manifest.projectProposal.industryContext) {
-            addLine(`Industry Context: ${manifest.projectProposal.industryContext}`);
+        if (planData.projectProposal.industryContext) {
+            addLine(`Industry Context: ${planData.projectProposal.industryContext}`);
         }
-        if (manifest.projectProposal.endUser) {
-            addLine(`End User: ${manifest.projectProposal.endUser}`);
+        if (planData.projectProposal.endUser) {
+            addLine(`End User: ${planData.projectProposal.endUser}`);
         }
-        if (manifest.projectProposal.successCriteria && manifest.projectProposal.successCriteria.length > 0) {
+        if (planData.projectProposal.successCriteria && planData.projectProposal.successCriteria.length > 0) {
             addLine("Success Criteria:");
-            manifest.projectProposal.successCriteria.forEach((criteria) => {
+            planData.projectProposal.successCriteria.forEach((criteria) => {
                 addLine(`• ${criteria}`);
             });
         }
-        if (manifest.projectProposal.mentor) {
-            addLine(`Mentor: ${manifest.projectProposal.mentor}`);
+        if (planData.projectProposal.mentor) {
+            addLine(`Mentor: ${planData.projectProposal.mentor}`);
         }
         addLine("Must map to CTE Model Curriculum Standards for the pathway + Career Ready Practices (communication, teamwork, problem solving).");
     } else {
@@ -249,8 +249,8 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Work-Based Learning Component
     addSectionHeader("WORK-BASED LEARNING COMPONENT");
-    if (manifest.workBasedLearning) {
-        if (manifest.workBasedLearning.activityType) {
+    if (planData.workBasedLearning) {
+        if (planData.workBasedLearning.activityType) {
             const activityLabels: Record<string, string> = {
                 "professional-interview": "Professional Interview",
                 "job-shadow": "Job Shadow",
@@ -259,17 +259,17 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
                 "on-the-job-training": "On-the-Job Training",
                 "other": "Other"
             };
-            addLine(`Activity Type: ${activityLabels[manifest.workBasedLearning.activityType] || manifest.workBasedLearning.activityType}`);
+            addLine(`Activity Type: ${activityLabels[planData.workBasedLearning.activityType] || planData.workBasedLearning.activityType}`);
         }
-        if (manifest.workBasedLearning.hours) {
-            addLine(`Hours: ${manifest.workBasedLearning.hours}`);
+        if (planData.workBasedLearning.hours) {
+            addLine(`Hours: ${planData.workBasedLearning.hours}`);
         }
-        if (manifest.workBasedLearning.description) {
-            addLine(`Description: ${manifest.workBasedLearning.description}`);
+        if (planData.workBasedLearning.description) {
+            addLine(`Description: ${planData.workBasedLearning.description}`);
         }
-        if (manifest.workBasedLearning.artifacts && manifest.workBasedLearning.artifacts.length > 0) {
+        if (planData.workBasedLearning.artifacts && planData.workBasedLearning.artifacts.length > 0) {
             addLine("Artifacts:");
-            manifest.workBasedLearning.artifacts.forEach((artifact) => {
+            planData.workBasedLearning.artifacts.forEach((artifact) => {
                 addLine(`• ${artifact}`);
             });
         }
@@ -283,8 +283,8 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Objectives
     addSectionHeader("OBJECTIVES");
-    if (manifest.objectives && manifest.objectives.length > 0) {
-        manifest.objectives.forEach((obj) => {
+    if (planData.objectives && planData.objectives.length > 0) {
+        planData.objectives.forEach((obj) => {
             addLine(`• ${obj}`);
         });
     } else {
@@ -294,29 +294,29 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Deliverables
     addSectionHeader("DELIVERABLES (Product + Process Bundle)");
-    if (manifest.deliverablesDetail) {
-        if (manifest.deliverablesDetail.technicalProduct) {
-            addLine(`Technical Product: ${manifest.deliverablesDetail.technicalProduct}`);
+    if (planData.deliverablesDetail) {
+        if (planData.deliverablesDetail.technicalProduct) {
+            addLine(`Technical Product: ${planData.deliverablesDetail.technicalProduct}`);
         }
-        if (manifest.deliverablesDetail.processEvidence && manifest.deliverablesDetail.processEvidence.length > 0) {
+        if (planData.deliverablesDetail.processEvidence && planData.deliverablesDetail.processEvidence.length > 0) {
             addLine("Process Evidence:");
-            manifest.deliverablesDetail.processEvidence.forEach((evidence) => {
+            planData.deliverablesDetail.processEvidence.forEach((evidence) => {
                 addLine(`• ${evidence}`);
             });
         }
-        if (manifest.deliverablesDetail.industryFeedback) {
-            addLine(`Industry Feedback: ${manifest.deliverablesDetail.industryFeedback}`);
+        if (planData.deliverablesDetail.industryFeedback) {
+            addLine(`Industry Feedback: ${planData.deliverablesDetail.industryFeedback}`);
         }
-        if (manifest.deliverablesDetail.standardsMap && manifest.deliverablesDetail.standardsMap.length > 0) {
+        if (planData.deliverablesDetail.standardsMap && planData.deliverablesDetail.standardsMap.length > 0) {
             addLine("Standards Map:");
-            manifest.deliverablesDetail.standardsMap.forEach((standard) => {
+            planData.deliverablesDetail.standardsMap.forEach((standard) => {
                 addLine(`• ${standard}`);
             });
         }
     }
-    if (manifest.deliverables && manifest.deliverables.length > 0) {
+    if (planData.deliverables && planData.deliverables.length > 0) {
         addLine("Additional Deliverables:");
-        manifest.deliverables.forEach((del) => {
+        planData.deliverables.forEach((del) => {
             addLine(`• ${del}`);
         });
     }
@@ -324,8 +324,8 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Timeline
     addSectionHeader("TIMELINE");
-    if (manifest.timeline && manifest.timeline.length > 0) {
-        manifest.timeline.forEach((phase) => {
+    if (planData.timeline && planData.timeline.length > 0) {
+        planData.timeline.forEach((phase) => {
             // Phase name with weeks - make it bold
             const phaseText = `${phase.phase} (${phase.weeks} weeks)`;
             const phaseRange = addLine(phaseText);
@@ -355,18 +355,18 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Public Presentation
     addSectionHeader("PUBLIC PRESENTATION");
-    if (manifest.publicPresentation) {
-        addLine(`Duration: ${manifest.publicPresentation.duration || "8-10 minutes"}`);
+    if (planData.publicPresentation) {
+        addLine(`Duration: ${planData.publicPresentation.duration || "8-10 minutes"}`);
         addLine("Defense to a panel (teacher + industry/college rep) with Q&A and rubric.");
-        if (manifest.publicPresentation.panelMembers && manifest.publicPresentation.panelMembers.length > 0) {
+        if (planData.publicPresentation.panelMembers && planData.publicPresentation.panelMembers.length > 0) {
             addLine("Panel Members:");
-            manifest.publicPresentation.panelMembers.forEach((member) => {
+            planData.publicPresentation.panelMembers.forEach((member) => {
                 addLine(`• ${member}`);
             });
         }
-        if (manifest.publicPresentation.rubricCriteria && manifest.publicPresentation.rubricCriteria.length > 0) {
+        if (planData.publicPresentation.rubricCriteria && planData.publicPresentation.rubricCriteria.length > 0) {
             addLine("Panel Rubric Criteria:");
-            manifest.publicPresentation.rubricCriteria.forEach((criteria) => {
+            planData.publicPresentation.rubricCriteria.forEach((criteria) => {
                 addLine(`• ${criteria}`);
             });
         }
@@ -378,38 +378,38 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Reflection & Postsecondary Plan
     addSectionHeader("REFLECTION & POSTSECONDARY PLAN");
-    if (manifest.reflectionPostsecondary) {
-        if (manifest.reflectionPostsecondary.reflection) {
-            addLine(`Reflection: ${manifest.reflectionPostsecondary.reflection}`);
+    if (planData.reflectionPostsecondary) {
+        if (planData.reflectionPostsecondary.reflection) {
+            addLine(`Reflection: ${planData.reflectionPostsecondary.reflection}`);
         }
         addLine("Updated Postsecondary Plan:");
-        if (manifest.reflectionPostsecondary.coursework && manifest.reflectionPostsecondary.coursework.length > 0) {
+        if (planData.reflectionPostsecondary.coursework && planData.reflectionPostsecondary.coursework.length > 0) {
             addLine("Coursework:");
-            manifest.reflectionPostsecondary.coursework.forEach((course) => {
+            planData.reflectionPostsecondary.coursework.forEach((course) => {
                 addLine(`• ${course}`);
             });
         }
-        if (manifest.reflectionPostsecondary.training && manifest.reflectionPostsecondary.training.length > 0) {
+        if (planData.reflectionPostsecondary.training && planData.reflectionPostsecondary.training.length > 0) {
             addLine("Training:");
-            manifest.reflectionPostsecondary.training.forEach((training) => {
+            planData.reflectionPostsecondary.training.forEach((training) => {
                 addLine(`• ${training}`);
             });
         }
-        if (manifest.reflectionPostsecondary.credentials && manifest.reflectionPostsecondary.credentials.length > 0) {
+        if (planData.reflectionPostsecondary.credentials && planData.reflectionPostsecondary.credentials.length > 0) {
             addLine("Credentials:");
-            manifest.reflectionPostsecondary.credentials.forEach((cred) => {
+            planData.reflectionPostsecondary.credentials.forEach((cred) => {
                 addLine(`• ${cred}`);
             });
         }
-        if (manifest.reflectionPostsecondary.apprenticeship && manifest.reflectionPostsecondary.apprenticeship.length > 0) {
+        if (planData.reflectionPostsecondary.apprenticeship && planData.reflectionPostsecondary.apprenticeship.length > 0) {
             addLine("Apprenticeship:");
-            manifest.reflectionPostsecondary.apprenticeship.forEach((app) => {
+            planData.reflectionPostsecondary.apprenticeship.forEach((app) => {
                 addLine(`• ${app}`);
             });
         }
-        if (manifest.reflectionPostsecondary.collegeMajor && manifest.reflectionPostsecondary.collegeMajor.length > 0) {
+        if (planData.reflectionPostsecondary.collegeMajor && planData.reflectionPostsecondary.collegeMajor.length > 0) {
             addLine("College Major:");
-            manifest.reflectionPostsecondary.collegeMajor.forEach((major) => {
+            planData.reflectionPostsecondary.collegeMajor.forEach((major) => {
                 addLine(`• ${major}`);
             });
         }
@@ -421,28 +421,28 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Rubric
     addSectionHeader("RUBRIC (4 Domains × 4 Levels)");
-    if (manifest.rubric) {
-        if (manifest.rubric.technicalQuality && manifest.rubric.technicalQuality.length > 0) {
+    if (planData.rubric) {
+        if (planData.rubric.technicalQuality && planData.rubric.technicalQuality.length > 0) {
             addLine("Technical Quality (meets pathway standards):");
-            manifest.rubric.technicalQuality.forEach((item) => {
+            planData.rubric.technicalQuality.forEach((item) => {
                 addLine(`• ${item}`);
             });
         }
-        if (manifest.rubric.workBasedIntegration && manifest.rubric.workBasedIntegration.length > 0) {
+        if (planData.rubric.workBasedIntegration && planData.rubric.workBasedIntegration.length > 0) {
             addLine("Work-Based Integration (uses real feedback/data):");
-            manifest.rubric.workBasedIntegration.forEach((item) => {
+            planData.rubric.workBasedIntegration.forEach((item) => {
                 addLine(`• ${item}`);
             });
         }
-        if (manifest.rubric.communicationProfessionalism && manifest.rubric.communicationProfessionalism.length > 0) {
+        if (planData.rubric.communicationProfessionalism && planData.rubric.communicationProfessionalism.length > 0) {
             addLine("Communication/Professionalism (panel, docs):");
-            manifest.rubric.communicationProfessionalism.forEach((item) => {
+            planData.rubric.communicationProfessionalism.forEach((item) => {
                 addLine(`• ${item}`);
             });
         }
-        if (manifest.rubric.reflectionNextSteps && manifest.rubric.reflectionNextSteps.length > 0) {
+        if (planData.rubric.reflectionNextSteps && planData.rubric.reflectionNextSteps.length > 0) {
             addLine("Reflection/Next Steps (concrete postsecondary plan):");
-            manifest.rubric.reflectionNextSteps.forEach((item) => {
+            planData.rubric.reflectionNextSteps.forEach((item) => {
                 addLine(`• ${item}`);
             });
         }
@@ -457,8 +457,8 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Assessment
     addSectionHeader("ASSESSMENT CRITERIA");
-    if (manifest.assessment && manifest.assessment.length > 0) {
-        manifest.assessment.forEach((ass) => {
+    if (planData.assessment && planData.assessment.length > 0) {
+        planData.assessment.forEach((ass) => {
             addLine(`• ${ass}`);
         });
     } else {
@@ -468,8 +468,8 @@ function formatManifestAsStructuredContent(manifest: CapstoneManifest): {
 
     // Resources
     addSectionHeader("RESOURCES");
-    if (manifest.resources && manifest.resources.length > 0) {
-        manifest.resources.forEach((res) => {
+    if (planData.resources && planData.resources.length > 0) {
+        planData.resources.forEach((res) => {
             addLine(`• ${res}`);
         });
     } else {

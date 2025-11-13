@@ -40,7 +40,7 @@ export default function Onboarding({ user }: OnboardingProps) {
 
     // Clear previous chat history to start fresh
     sessionStorage.removeItem("messages");
-    sessionStorage.removeItem("manifest");
+    sessionStorage.removeItem("capstonePlanData");
     sessionStorage.removeItem("conversationState");
 
     const onboardingData = { name, ctePathway };

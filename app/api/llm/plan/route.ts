@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import type { ChatCompletion } from "openai/resources/chat/completions";
-import { LLMPlanRequest, LLMPlanResponse, CapstoneManifest } from "@/types";
+import { LLMPlanRequest, LLMPlanResponse, CapstonePlanData } from "@/types";
 
 // nodejs runtime for longer timeout limits and better compatibility with OpenAI API
 export const runtime = "nodejs";
@@ -9,19 +9,19 @@ export const runtime = "nodejs";
 /*
 This route is the main entry point for the LLM plan and chat conversation.
 It is responsible for:
-- Generating a manifest based on the conversation
+- Generating capstone plan data based on the conversation
 - Moving to review phase if the student has asked more than 5 questions
-- Returning the manifest to the client
+- Returning the capstone plan data to the client
 */
 
 // ==========================================================
-// Manifest System Prompt (passed to LLM at different stages)
+// Capstone Plan Data System Prompt (passed to LLM at different stages)
 // ==========================================================
 
-const MANIFEST_SYSTEM_PROMPT = [
+const CAPSTONE_PLAN_DATA_SYSTEM_PROMPT = [
     "under no circumstance should you return explicit content or language, no images, no links, no code, no nothing that is not related to the conversation or the capstone project planning.",
     "You are a helpful assistant/guidance counselor for High School CTE pathway capstone planning.",
-    "Based on the conversation, generate a complete capstone project manifest in JSON format that includes all required CTE framework components.",
+    "Based on the conversation, generate a complete capstone project plan data in JSON format that includes all required CTE framework components.",
     "The conversation will be career focused, finding their interests and skills, and helping guide them towards a career path they are interested in, then helping them plan their capstone project.",
     "CRITICAL: You MUST populate all framework fields when possible from the conversation. This comprehensive capstone framework includes:",
     "- projectProposal: problem/opportunity, industry context, end user, success criteria, mentor",
@@ -142,37 +142,37 @@ export async function POST(request: Request): Promise<NextResponse> {
             );
         }
 
-        // Hard server cutoff - if we've reached max turns or are in review phase, force manifest generation
+        // Hard server cutoff - if we've reached max turns or are in review phase, force capstone plan data generation
         const currentTurnCount = typeof turnCount === "number" ? turnCount : 0;
         const currentPhase = phase || "brainstorm";
 
         if (currentPhase === "review" || currentPhase === "complete") {
-            // Force manifest generation if we're already in review phase
+            // Force capstone plan data generation if we're already in review phase
             // This ensures we don't continue chatting once review is triggered
             const conversationSummary = conversation && Array.isArray(conversation)
                 ? conversation.map((m: { role: string; content: string }) => `${m.role}: ${m.content}`).join("\n")
                 : message;
 
-            const system = MANIFEST_SYSTEM_PROMPT
+            const system = CAPSTONE_PLAN_DATA_SYSTEM_PROMPT
 
             const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0,
                 messages: [
                     { role: "system", content: system },
-                    { role: "user", content: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}` },
+                    { role: "user", content: `Generate a complete capstone project plan data based on this conversation:\n\n${conversationSummary}` },
                 ],
                 response_format: { type: "json_object" },
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: CapstoneManifest;
+            let parsed: CapstonePlanData;
             try {
                 const temp = JSON.parse(content);
                 if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
-                    return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
+                    return NextResponse.json({ error: "Invalid capstone plan data format" }, { status: 502 });
                 }
-                parsed = temp as CapstoneManifest;
+                parsed = temp as CapstonePlanData;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -189,33 +189,33 @@ export async function POST(request: Request): Promise<NextResponse> {
             } as LLMPlanResponse);
         }
 
-        // Hard cutoff: if turnCount >= MAX_TURNS, generate manifest and return it
+        // Hard cutoff: if turnCount >= MAX_TURNS, generate capstone plan data and return it
         if (currentTurnCount >= MAX_TURNS && currentPhase === "brainstorm") {
-            // Generate manifest immediately at cutoff to eliminate the extra round-trip
+            // Generate capstone plan data immediately at cutoff to eliminate the extra round-trip
             const conversationSummary = conversation && Array.isArray(conversation)
                 ? conversation.map((m: { role: string; content: string }) => `${m.role}: ${m.content}`).join("\n")
                 : message;
 
-            const system = MANIFEST_SYSTEM_PROMPT
+            const system = CAPSTONE_PLAN_DATA_SYSTEM_PROMPT
 
             const response = await createChatCompletionWithTimeout({
                 model: "gpt-4o-mini",
                 temperature: 0,
                 messages: [
                     { role: "system", content: system },
-                    { role: "user", content: `Generate a complete capstone project manifest based on this conversation:\n\n${conversationSummary}` },
+                    { role: "user", content: `Generate a complete capstone project plan data based on this conversation:\n\n${conversationSummary}` },
                 ],
                 response_format: { type: "json_object" },
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: CapstoneManifest;
+            let parsed: CapstonePlanData;
             try {
                 const temp = JSON.parse(content);
                 if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
-                    return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
+                    return NextResponse.json({ error: "Invalid capstone plan data format" }, { status: 502 });
                 }
-                parsed = temp as CapstoneManifest;
+                parsed = temp as CapstonePlanData;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -236,8 +236,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
 
         if (generateManifest) {
-            // Manifest generation mode - return structured JSON with content for Google Docs, Sheets, and Slides
-            const system = MANIFEST_SYSTEM_PROMPT
+            // Capstone plan data generation mode - return structured JSON with content for Google Docs, Sheets, and Slides
+            const system = CAPSTONE_PLAN_DATA_SYSTEM_PROMPT
 
             messages.push({ role: "system", content: system });
 
@@ -266,13 +266,13 @@ export async function POST(request: Request): Promise<NextResponse> {
             });
 
             const content = response.choices[0]?.message?.content ?? "{}";
-            let parsed: CapstoneManifest;
+            let parsed: CapstonePlanData;
             try {
                 const temp = JSON.parse(content);
                 if (typeof temp !== "object" || temp === null || Array.isArray(temp)) {
-                    return NextResponse.json({ error: "Invalid manifest format" }, { status: 502 });
+                    return NextResponse.json({ error: "Invalid capstone plan data format" }, { status: 502 });
                 }
-                parsed = temp as CapstoneManifest;
+                parsed = temp as CapstonePlanData;
             } catch {
                 return NextResponse.json({ error: "Non-JSON response from model" }, { status: 502 });
             }
@@ -357,14 +357,14 @@ export async function POST(request: Request): Promise<NextResponse> {
             const newTurnCount = currentTurnCount + 1;
             const newPhase = shouldMoveToReview ? "review" : currentPhase;
 
-            // Check if the response contains a manifest-like structure
-            let manifest: CapstoneManifest | null = null;
+            // Check if the response contains a capstone plan data-like structure
+            let capstonePlanData: CapstonePlanData | null = null;
             try {
                 const jsonMatch = content.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]) as Partial<CapstoneManifest>;
+                    const parsed = JSON.parse(jsonMatch[0]) as Partial<CapstonePlanData>;
                     if (parsed.title && parsed.ctePathway) {
-                        manifest = parsed as CapstoneManifest;
+                        capstonePlanData = parsed as CapstonePlanData;
                     }
                 }
             } catch {
@@ -373,7 +373,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
             return NextResponse.json({
                 response: content,
-                manifest: manifest,
+                capstonePlanData: capstonePlanData,
                 phase: newPhase,
                 turnCount: newTurnCount,
             });

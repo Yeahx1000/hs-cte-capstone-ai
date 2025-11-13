@@ -5,16 +5,16 @@ import Chat from "@/components/Chat";
 import UserMenu from "@/components/UserMenu";
 import ReviewOverlay from "@/components/ReviewOverlay";
 import { useChat } from "@/lib/hooks/useChat";
-import { Manifest, ManifestSchema } from "@/lib/manifest";
+import { CapstonePlanData, CapstonePlanDataSchema } from "@/lib/capstonePlanData";
 import { OnboardingData } from "@/types";
 
 export default function ChatPage() {
     const { data: session } = useSession();
-    const { messages, loading, error, manifest, sendMessage, conversationState, generateManifest, manifestGenerating } = useChat();
+    const { messages, loading, error, capstonePlanData, sendMessage, conversationState, generateCapstonePlanData, capstonePlanDataGenerating } = useChat();
     const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
     const [reviewLoading, setReviewLoading] = useState(false);
     const [isReviewOpen, setIsReviewOpen] = useState(false);
-    const [currentManifest, setCurrentManifest] = useState<Manifest | null>(null);
+    const [currentCapstonePlanData, setCurrentCapstonePlanData] = useState<CapstonePlanData | null>(null);
 
     useEffect(() => {
         // Get onboarding data from sessionStorage (optional)
@@ -29,28 +29,28 @@ export default function ChatPage() {
         }
     }, []);
 
-    // Update current manifest when manifest from hook changes
+    // Update current capstone plan data when capstonePlanData from hook changes
     useEffect(() => {
-        if (manifest) {
-            setCurrentManifest(manifest);
+        if (capstonePlanData) {
+            setCurrentCapstonePlanData(capstonePlanData);
         }
-    }, [manifest]);
+    }, [capstonePlanData]);
 
-    // Prefetch manifest data when review button is about to appear (attempting to reduce latency)
+    // Prefetch capstone plan data when review button is about to appear (attempting to reduce latency)
     useEffect(() => {
-        // Start generating manifest in background when we have enough data
-        if (conversationState?.phase === "review" && !manifest && !manifestGenerating && !loading && messages.length >= 4) {
-            const storedManifest = sessionStorage.getItem("manifest");
-            // Only prefetch if we don't already have a manifest
-            if (!storedManifest) {
+        // Start generating capstone plan data in background when we have enough data
+        if (conversationState?.phase === "review" && !capstonePlanData && !capstonePlanDataGenerating && !loading && messages.length >= 4) {
+            const storedPlanData = sessionStorage.getItem("capstonePlanData");
+            // Only prefetch if we don't already have capstone plan data
+            if (!storedPlanData) {
                 // Don't await - let it run in background
-                generateManifest(onboardingData ?? undefined).catch(() => {
+                generateCapstonePlanData(onboardingData ?? undefined).catch(() => {
                     // Silently fail - user can regenerate if needed
                 });
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [conversationState?.phase, manifest, manifestGenerating, loading, messages.length]);
+    }, [conversationState?.phase, capstonePlanData, capstonePlanDataGenerating, loading, messages.length]);
 
     const handleSendMessage = (content: string) => {
         sendMessage(content, onboardingData ?? undefined);
@@ -60,42 +60,42 @@ export default function ChatPage() {
         if (messages.length > 0) {
             setReviewLoading(true);
             try {
-                // Check if manifest was already generated in background
-                const storedManifest = sessionStorage.getItem("manifest");
+                // Check if capstone plan data was already generated in background
+                const storedPlanData = sessionStorage.getItem("capstonePlanData");
                 let shouldGenerate = true;
 
-                if (storedManifest) {
+                if (storedPlanData) {
                     try {
-                        const parsed = JSON.parse(storedManifest);
-                        const validated = ManifestSchema.parse(parsed);
-                        // Use existing manifest if it's valid and we're not forced to regenerate
+                        const parsed = JSON.parse(storedPlanData);
+                        const validated = CapstonePlanDataSchema.parse(parsed);
+                        // Use existing capstone plan data if it's valid and we're not forced to regenerate
                         if (validated && validated.title && validated.ctePathway) {
-                            // If there's already a valid manifest, use it
+                            // If there's already valid capstone plan data, use it
                             // But still ensure CTE pathway matches onboarding
                             if (onboardingData?.ctePathway && validated.ctePathway !== onboardingData.ctePathway) {
                                 validated.ctePathway = onboardingData.ctePathway;
-                                sessionStorage.setItem("manifest", JSON.stringify(validated));
+                                sessionStorage.setItem("capstonePlanData", JSON.stringify(validated));
                             }
-                            setCurrentManifest(validated);
+                            setCurrentCapstonePlanData(validated);
                             shouldGenerate = false;
                         }
                     } catch {
-                        // Invalid manifest, regenerate
+                        // Invalid capstone plan data, regenerate
                     }
                 }
 
                 if (shouldGenerate) {
-                    // Clear old manifest to force regeneration
-                    sessionStorage.removeItem("manifest");
-                    const generated = await generateManifest(onboardingData ?? undefined);
+                    // Clear old capstone plan data to force regeneration
+                    sessionStorage.removeItem("capstonePlanData");
+                    const generated = await generateCapstonePlanData(onboardingData ?? undefined);
                     if (!generated) {
                         alert("Failed to generate capstone plan. Please try again.");
                         return;
                     }
-                    setCurrentManifest(generated);
+                    setCurrentCapstonePlanData(generated);
                 }
 
-                // Open overlay with manifest
+                // Open overlay with capstone plan data
                 setIsReviewOpen(true);
             } catch {
                 alert("Failed to generate capstone plan. Please try again.");
@@ -103,28 +103,28 @@ export default function ChatPage() {
                 setReviewLoading(false);
             }
         } else {
-            // No messages, check if we have a stored manifest
-            const storedManifest = sessionStorage.getItem("manifest");
-            if (storedManifest) {
+            // No messages, check if we have stored capstone plan data
+            const storedPlanData = sessionStorage.getItem("capstonePlanData");
+            if (storedPlanData) {
                 try {
-                    const parsed = JSON.parse(storedManifest);
-                    const validated = ManifestSchema.parse(parsed);
+                    const parsed = JSON.parse(storedPlanData);
+                    const validated = CapstonePlanDataSchema.parse(parsed);
                     if (validated && validated.title && validated.ctePathway) {
-                        setCurrentManifest(validated);
+                        setCurrentCapstonePlanData(validated);
                         setIsReviewOpen(true);
                         return;
                     }
                 } catch {
-                    // Invalid manifest
+                    // Invalid capstone plan data
                 }
             }
             alert("No conversation found. Please start a conversation first.");
         }
     };
 
-    const handleManifestUpdate = (updatedManifest: Manifest) => {
-        setCurrentManifest(updatedManifest);
-        sessionStorage.setItem("manifest", JSON.stringify(updatedManifest));
+    const handleCapstonePlanDataUpdate = (updatedCapstonePlanData: CapstonePlanData) => {
+        setCurrentCapstonePlanData(updatedCapstonePlanData);
+        sessionStorage.setItem("capstonePlanData", JSON.stringify(updatedCapstonePlanData));
     };
 
     if (!session?.user) {
@@ -149,7 +149,7 @@ export default function ChatPage() {
                                 conversationState={conversationState}
                                 onReviewClick={handleReviewClick}
                                 reviewLoading={reviewLoading}
-                                manifestGenerating={manifestGenerating}
+                                capstonePlanDataGenerating={capstonePlanDataGenerating}
                             />
                         </div>
                         {error && (
@@ -160,12 +160,12 @@ export default function ChatPage() {
                     </div>
                 </div>
             </div>
-            {currentManifest && (
+            {currentCapstonePlanData && (
                 <ReviewOverlay
-                    manifest={currentManifest}
+                    capstonePlanData={currentCapstonePlanData}
                     isOpen={isReviewOpen}
                     onClose={() => setIsReviewOpen(false)}
-                    onManifestUpdate={handleManifestUpdate}
+                    onCapstonePlanDataUpdate={handleCapstonePlanDataUpdate}
                 />
             )}
         </>

@@ -93,7 +93,7 @@ export interface CapstoneRubric {
     reflectionNextSteps?: string[];
 }
 
-export interface CapstoneManifest {
+export interface CapstonePlanData {
     title: string;
     ctePathway: string;
     objectives: string[];
@@ -127,18 +127,18 @@ export interface LLMPlanRequest {
 }
 
 export interface CapstoneCreateRequest {
-    manifest: CapstoneManifest;
+    capstonePlanData: CapstonePlanData;
     studentName?: string;
 }
 
 // API Response Types
 export interface LLMPlanResponse {
     response?: string;
-    manifest?: CapstoneManifest;
+    capstonePlanData?: CapstonePlanData;
     phase: ConversationPhase;
     turnCount: number;
     suggested_replies?: string[];
-    // Manifest fields (when generateManifest is true)
+    // CapstonePlanData fields (when generateManifest is true)
     title?: string;
     ctePathway?: string;
     objectives?: string[];
