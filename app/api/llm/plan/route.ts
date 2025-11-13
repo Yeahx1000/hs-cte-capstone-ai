@@ -126,7 +126,7 @@ async function createChatCompletionWithTimeout(
 export async function POST(request: Request): Promise<NextResponse> {
     try {
         const body = await request.json() as LLMPlanRequest;
-        const { message, conversation, generateManifest, turnCount = 0, phase = "brainstorm", onboardingData } = body;
+        const { message, conversation, generateCapstonePlanData, turnCount = 0, phase = "brainstorm", onboardingData } = body;
 
         if (!message) {
             return NextResponse.json(
@@ -235,7 +235,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         // Build conversation history for context
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [];
 
-        if (generateManifest) {
+        if (generateCapstonePlanData) {
             // Capstone plan data generation mode - return structured JSON with content for Google Docs, Sheets, and Slides
             const system = CAPSTONE_PLAN_DATA_SYSTEM_PROMPT
 

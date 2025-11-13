@@ -180,7 +180,7 @@ export const useChat = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     message: planPrompt,
-                    generateManifest: true,
+                    generateCapstonePlanData: true,
                     onboardingData,
                 }),
             });

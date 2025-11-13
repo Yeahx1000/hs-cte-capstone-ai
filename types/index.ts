@@ -120,7 +120,7 @@ export interface OnboardingData {
 export interface LLMPlanRequest {
     message: string;
     conversation?: Array<{ role: string; content: string }>;
-    generateManifest?: boolean;
+    generateCapstonePlanData?: boolean;
     turnCount?: number;
     phase?: ConversationPhase;
     onboardingData?: OnboardingData;
@@ -138,7 +138,7 @@ export interface LLMPlanResponse {
     phase: ConversationPhase;
     turnCount: number;
     suggested_replies?: string[];
-    // CapstonePlanData fields (when generateManifest is true)
+    // CapstonePlanData fields (when generateCapstonePlanData is true)
     title?: string;
     ctePathway?: string;
     objectives?: string[];
